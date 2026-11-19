@@ -26,6 +26,16 @@ O anfitrião também pode usar **Copiar código e link** na sala para enviar o c
 
 A equipe percorre um tabuleiro de 45 casas, resolve cartas de dilema e evidência, usa power-ups e realiza entregas. Todos acompanham os indicadores coletivos de água, energia, licença social e desenvolvimento. As decisões exploram temas como consulta prévia, transparência de dados, impacto ambiental e efeito rebote da eficiência.
 
+## Recursos para a apresentação
+
+- **Power-ups em destaque:** ao ganhar ou usar um power-up, uma carta animada aparece na tela com nome, efeito, quando usar e a ligação com o tema do seminário. No modo online, todos veem o ganho.
+- **Modo apresentação:** botão no topo (ou tecla **P**) amplia a interface e abre tela cheia para projetor.
+- **Timer de debate:** nas cartas de dilema e nas decisões de entrega, um cronômetro de 60 s ajuda a conduzir a discussão com a plateia.
+- **Som:** efeitos sonoros simples para dado, power-up, decisões e fim de partida, com botão para silenciar.
+- **Atalho:** a barra de espaço rola o dado quando for a sua vez.
+- **Fim de partida:** ranking com a meta de cada papel, histórico das decisões e botão **Copiar resumo da partida** para o relatório do seminário.
+- **Baralhos sem repetição:** dilemas, evidências e power-ups só se repetem depois que todas as cartas saem.
+
 ## Tecnologias
 
 - HTML, CSS e JavaScript
