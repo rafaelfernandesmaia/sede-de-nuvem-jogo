@@ -28,6 +28,7 @@ A equipe percorre um tabuleiro de 45 casas, resolve cartas de dilema e evidênci
 
 ## Recursos para a apresentação
 
+- **Painel "Quem é quem":** o botão **Papéis** (ou um clique no jogador) abre um cartão para cada voz do caso, com quem é, o que quer, a meta para vencer, o caminho no tabuleiro, o cuidado principal e uma pergunta para o debate. Tem linguagem simples, ícones junto com texto, ajuste do tamanho da letra, alto contraste, leitura em voz alta (quando o navegador permite) e impressão.
 - **Power-ups em destaque:** ao ganhar ou usar um power-up, uma carta animada aparece na tela com nome, efeito, quando usar e a ligação com o tema do seminário. No modo online, todos veem o ganho.
 - **Modo apresentação:** botão no topo (ou tecla **P**) amplia a interface e abre tela cheia para projetor.
 - **Timer de debate:** nas cartas de dilema e nas decisões de entrega, um cronômetro de 60 s ajuda a conduzir a discussão com a plateia.
