@@ -113,12 +113,12 @@
 (()=>{
   const $=s=>document.querySelector(s);
   const skin=document.createElement("link");skin.rel="stylesheet";skin.href="./melhorias-ambiente.css";document.head.appendChild(skin);
-  let audio=null,muted=localStorage.getItem("sede-som-muted")==="true";
+  let audio=null,muted=false;try{muted=localStorage.getItem("sede-som-muted")==="true"}catch(e){}
   function sound(kind){
     if(muted)return;
     try{const C=window.AudioContext||window.webkitAudioContext;if(!C)return;audio=audio||new C();if(audio.state==="suspended")audio.resume();const now=audio.currentTime,o=audio.createOscillator(),g=audio.createGain(),f=kind==="water"?[490,710]:kind==="warning"?[180,120]:kind==="card"?[520,380]:kind==="step"?[250,330]:kind==="score"?[620,780]:[180,420,260,550];o.type=kind==="warning"?"triangle":"sine";o.frequency.setValueAtTime(f[0],now);if(f.length>1)o.frequency.exponentialRampToValueAtTime(f[f.length-1],now+.16);g.gain.setValueAtTime(.0001,now);g.gain.exponentialRampToValueAtTime((kind==="warning" ? 0.055 : 0.035),now+.018);g.gain.exponentialRampToValueAtTime(.0001,now+.22);o.connect(g);g.connect(audio.destination);o.start(now);o.stop(now+.23)}catch(e){}
   }
-  function mountSound(){const nav=$(".top-actions");if(!nav||$("#soundToggle"))return;const b=document.createElement("button");b.id="soundToggle";b.type="button";b.className="btn sound-toggle";b.setAttribute("aria-pressed",String(!muted));b.textContent=muted?"🔇 Som desligado":"🔊 Som ligado";b.onclick=function(){muted=!muted;localStorage.setItem("sede-som-muted",String(muted));b.textContent=muted?"🔇 Som desligado":"🔊 Som ligado";b.setAttribute("aria-pressed",String(!muted));if(!muted)sound("card")};nav.insertBefore(b,nav.firstChild)}
+  function mountSound(){const nav=$(".top-actions");if(!nav||$("#soundToggle"))return;const b=document.createElement("button");b.id="soundToggle";b.type="button";b.className="btn sound-toggle";b.setAttribute("aria-pressed",String(!muted));b.textContent=muted?"🔇 Som desligado":"🔊 Som ligado";b.onclick=function(){muted=!muted;try{localStorage.setItem("sede-som-muted",String(muted))}catch(e){}b.textContent=muted?"🔇 Som desligado":"🔊 Som ligado";b.setAttribute("aria-pressed",String(!muted));if(!muted)sound("card")};nav.insertBefore(b,nav.firstChild)}
   function waterState(){const n=G&&Number.isFinite(+G.aquifer)?+G.aquifer:10;return n>=8?"healthy":n>=3?"dry":"critical"}
   const paths={
     tribunal:'<path d="M3 9 12 3l9 6M5 10h14M6 10v8m4-8v8m4-8v8m4-8v8M3 20h18"/>',
@@ -163,7 +163,7 @@
   const EVENTS=[
     {id:"estiagem",name:"Estiagem prolongada no Ceará",description:"A estiagem pressiona os poços: aquífero −1.",run:()=>G.aquifer=Math.max(0,G.aquifer-1)},
     {id:"pico-ia",name:"Pico de processamento de IA",description:"A demanda computacional cresce: aquífero −1.",run:()=>G.aquifer=Math.max(0,G.aquifer-1)},
-    {id:"fiscalizacao",name:"Fiscalização ambiental no Tribunal",description:"Cargas maquiadas ativas são devolvidas; cada responsável perde 2 pontos.",run:()=>{let found=false;G.players.forEach(p=>{if(p.cargo&&p.cargo.maquiada){found=true;p.cargo=null;p.score=Math.max(0,p.score-2);addLog(p.name+" teve carga maquiada auditada: devolveu a carta e perdeu 2 pontos.")}});if(!found)addLog("Fiscalização ambiental: nenhuma carga maquiada ativa foi encontrada.")}},
+    {id:"fiscalizacao",name:"Fiscalização ambiental no Tribunal",description:"Cargas maquiadas ativas são devolvidas; cada responsável perde 2 pontos.",run:()=>{let found=false;G.players.forEach(p=>{if(p.cargo&&p.cargo.maquiada){found=true;p.score-=2;returnCargo(p,"fiscalização ambiental");addLog(p.name+" teve carga maquiada auditada e perdeu 2 pontos.")}});if(!found)addLog("Fiscalização ambiental: nenhuma carga maquiada ativa foi encontrada.")}},
     {id:"reuso",name:"Mutirão de reuso de água",description:"Comunidade e universidade recuperam 1 ponto do aquífero.",run:()=>G.aquifer=Math.min(10,G.aquifer+1)}
   ];
   const oldAdvance=advanceRound;advanceRound=function(){const ok=oldAdvance.apply(this,arguments);if(!ok||!G||!G.game)return ok;const r=G.round;if(r>1&&(r-1)%2===0&&G.lastEventRound!==r){G.lastEventRound=r;ensureStats();const e=EVENTS[Math.floor(Math.random()*EVENTS.length)];e.run();G.events.push({round:r,id:e.id,name:e.name,description:e.description});G.lastEvent=e.name+": "+e.description;G.newsTicker="EVENTO GLOBAL · "+G.lastEvent;addLog("Evento global da rodada "+r+" — "+G.lastEvent);render();toast("Evento global: "+e.name);sound(e.id==="estiagem"||e.id==="pico-ia"?"warning":"water");if(G.aquifer<=0){endGame(true);return false}}return true};
@@ -174,5 +174,6 @@
   const oldShowEnd=showEndFromState;showEndFromState=function(){const r=oldShowEnd.apply(this,arguments);requestAnimationFrame(putDebrief);return r};
   mountSound();render()
 })();
+
 
 
