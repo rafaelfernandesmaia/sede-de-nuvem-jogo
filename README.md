@@ -79,23 +79,16 @@ Quando 2 ou mais entregas são concluídas na mesma rodada, o aquífero cai 1 pe
 
 O modo local pode ser jogado em um único dispositivo. Para uma partida online, todos abrem o mesmo endereço; uma pessoa cria a sala e compartilha o código. Os demais entram com esse código. O anfitrião inicia quando houver pelo menos 2 pessoas, e as jogadas e o estado do tabuleiro são sincronizados pelo Firebase Realtime Database.
 
-O modo online requer que **firebase-config.js** esteja preenchido, o login anônimo esteja ativo e as regras do Realtime Database permitam as salas. Se o jogo pedir configuração, consulte o arquivo **online-setup.md** do projeto.
+O modo online requer que **firebase-config.js** esteja preenchido, o login anônimo esteja ativo e as regras do Realtime Database permitam as salas. Mantenha **melhorias.js** e **melhorias-ambiente.css** na raiz, junto de **index.html**, para carregar as interações e o visual atualizados. Se o jogo pedir configuração, consulte o arquivo **online-setup.md** do projeto.
+
+## Recursos do jogo digital
+
+- Mapa estilizado do Complexo do Pecém ligando Porto, Parque Eólico, Data Center, Aldeia Anacé, Poços e Tribunal.
+- Cores e alertas reagem ao aquífero compartilhado: 8–10 saudável, 3–7 em atenção e 0–2 em alerta crítico. A escala é didática e não representa litros reais.
+- O Jornal do Pecém registra os acontecimentos e apresenta eventos globais a cada duas rodadas.
+- Cartas com visual de peças físicas, selos de impacto, animação de revelação, dado e peões animados. O botão de som permite ativar ou silenciar efeitos leves.
+- Ao fim da partida, o debriefing resume escolhas transparentes, atalhos e entregas, e ajuda o grupo a conversar sobre o resultado coletivo.
 
 ## TAGS do seminário
 
 Pegada hídrica · Semiárido · Justiça socioambiental · Consulta prévia (Anacé) · Transparência / Greenwashing · Efeito rebote (Jevons) · Nexo água-energia · Green AI · Licença social · Princípio da responsabilidade.
-
-## Roteiro de apresentação
-
-O jogo inclui um roteiro de 28 minutos, dentro do intervalo de 25 a 35 minutos previsto para a atividade:
-
-1. Introdução ao tema — 4 min.
-2. Objetivos do jogo — 2 min.
-3. TAGS — 2 min.
-4. História e desafio — 4 min.
-5. Mecânicas — 3 min.
-6. Protótipo — 2 min.
-7. Regras e partida demonstrativa de 2 a 3 rodadas — 8 min.
-8. Conclusões — 3 min.
-
-A apresentação termina com as perguntas: **Quanto custa? Para quem? Quem decidiu?**
