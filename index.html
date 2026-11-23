@@ -3,8 +3,12 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#eee2c5">
 <title>Sede de Nuvem · O Jogo do Pecém</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.2/font/bootstrap-icons.min.css">
 <style>
-:root{--ink:#263d34;--green:#345b43;--paper:#fbf5e5;--line:#cbbb98;--blue:#78aeb4;--red:#ce8068;--gold:#e7c45d;--ui:system-ui,-apple-system,"Segoe UI",sans-serif;--mono:"Courier New",monospace}
+:root{--ink:#263d34;--green:#345b43;--paper:#fbf5e5;--line:#cbbb98;--blue:#78aeb4;--red:#ce8068;--gold:#e7c45d;--ui:"DM Sans",system-ui,-apple-system,"Segoe UI",sans-serif;--mono:"IBM Plex Mono","Courier New",monospace}
 *{box-sizing:border-box}body{margin:0;min-height:100vh;background:repeating-linear-gradient(2deg,#d4b987 0 3px,#c9ab79 3px 6px,#d2b584 6px 10px);color:var(--ink);font-family:var(--ui)}button,input,select{font:inherit}button{cursor:pointer}
 .app{max-width:1500px;margin:auto;padding:16px 20px 30px}.top{display:flex;justify-content:space-between;align-items:center;gap:14px;border-bottom:3px solid #96764b;padding-bottom:12px}.brand{display:flex;align-items:center;gap:10px;min-width:220px}.logo{width:46px;height:46px;display:grid;place-items:center;border:3px solid var(--green);background:#e8efd9;border-radius:8px;box-shadow:3px 3px 0 #758766;font-size:25px}.brand b{font:900 13px var(--mono);line-height:1.35;letter-spacing:.04em}.brand small{font:700 10px var(--ui);letter-spacing:.12em;color:#66715c}
 .top-actions{display:flex;gap:8px;align-items:center;justify-content:flex-end;flex-wrap:wrap}.btn{border:2px solid #9c855d;background:var(--paper);color:var(--green);border-radius:7px;padding:9px 12px;font-weight:800;box-shadow:0 3px 0 #9c855d;transition:transform .12s,filter .12s}.btn:hover{transform:translateY(-1px);filter:brightness(.98)}.btn:disabled{opacity:.48;cursor:not-allowed;transform:none}.btn.primary{background:var(--green);border-color:#254832;box-shadow:0 3px 0 #254832;color:#fff9e7}
@@ -27,6 +31,7 @@
 
 .board-center{justify-content:space-between;overflow:hidden;border:2px solid #f2e8cb;background:linear-gradient(180deg,#a6cbd0 0%,#c7d5c2 41%,#729797 42%,#3b6c79 76%,#d0b87d 77%,#58734f 100%)}.pecem-art{position:absolute;inset:0;width:100%;height:100%;z-index:0;opacity:.96}.center-caption{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:2px;margin-top:3px;padding:5px 10px;background:#254536df;color:#fff9df;border:1px solid #f4e5bd;border-radius:7px;box-shadow:0 3px 8px #1a2b2855}.center-caption small{font:800 8px var(--mono);letter-spacing:.1em}.board-center .center-title{font:900 clamp(12px,1.7vw,18px) var(--mono);letter-spacing:.06em;line-height:1.1}.board-center .center-subtitle{font:800 8px var(--mono);letter-spacing:.08em;margin-top:1px}.board-center .center-water{position:relative;z-index:2;display:inline-block;margin:3px 0 4px;padding:4px 9px;background:#203c35e8;border:1px solid #cce2cb;border-radius:99px;font-size:clamp(9px,1.2vw,13px)!important;text-shadow:none}
 </style>
+<link rel="stylesheet" href="./melhorias-ambiente.css">
 </head>
 <body>
 <div class="app">
@@ -35,8 +40,7 @@
   <nav class="top-actions" aria-label="Ações do jogo">
     <button class="btn" id="onlineTop" type="button">Jogar online</button>
     <button class="btn" id="componentsBtn" type="button">Componentes</button>
-    <button class="btn" id="rulesBtn" type="button">Regras</button>
-    <button class="btn" id="glossaryBtn" type="button">Glossário</button>
+    <button class="btn" id="helpBtn" type="button"><i class="bi bi-journal-richtext" aria-hidden="true"></i> Ajuda</button>
     <button class="btn" id="settingsTop" type="button">Configurações</button>
     <button class="btn" id="newGameBtn" type="button">Menu</button>
   </nav>
@@ -68,6 +72,7 @@
       <div class="dice-box" role="status" aria-live="polite"><span class="dice-face" id="diceFace">🎲</span><span id="diceLabel">Aguardando início</span></div>
       <div class="controls"><button class="btn primary" id="rollBtn" type="button">Rolar o dado</button><button class="btn" id="endTurnBtn" type="button">Encerrar turno →</button></div>
     </section>
+    <section class="panel demo-tools" id="demoToolsPanel" hidden><div class="panel-head"><h2>ATALHOS DE APRESENTAÇÃO</h2><span class="badge">3 RODADAS</span></div><p>A Disputa começa na primeira rota. Use os atalhos para mostrar um dilema ou a Auditoria.</p><div class="demo-tool-actions"><button class="btn" id="demoDilemmaBtn" type="button"><i class="bi bi-exclamation-diamond" aria-hidden="true"></i> Abrir dilema</button><button class="btn" id="demoAuditBtn" type="button"><i class="bi bi-search" aria-hidden="true"></i> Demonstrar auditoria</button></div></section>
     <section class="panel"><div class="panel-head"><h2>CONTROLE DOS TERRITÓRIOS</h2><span class="badge">+1 PONTO CADA</span></div><div id="territoryList" class="territory-list"></div></section>
     <section class="panel"><div class="panel-head"><h2>ÚLTIMA JOGADA</h2><span>↻</span></div><div id="lastMoveSummary"></div></section>
     <section class="panel"><div class="panel-head"><h2>DIÁRIO DA PARTIDA</h2><span>📜</span></div><div id="log" class="log"></div></section>
@@ -75,8 +80,10 @@
 </main>
 </div>
 <div class="toast hidden" id="toast" role="status" aria-live="polite"></div>
+<aside class="connection-notice" id="connectionNotice" role="status" aria-live="assertive" hidden><span><b id="connectionMessage">Conexão interrompida.</b><small>Você pode seguir nesta tela no modo local.</small></span><button class="btn" id="continueLocally" type="button">Continuar localmente</button></aside>
 <div class="roll-overlay hidden" id="rollOverlay" role="status" aria-live="polite"><div class="roll-stage"><div class="roll-caption" id="rollCaption">VEZ DE JOGADOR</div><div class="roll-die rolling" id="rollDie" aria-hidden="true">🎲</div><div class="roll-number" id="rollNumber">O DADO ESTÁ ROLANDO…</div><div class="roll-hint" id="rollHint">Seu marcador vai avançar casa por casa</div></div></div>
 <div class="overlay" id="overlay"><div id="modal" class="modal setup-modal"></div></div>
+<script src="./game-hooks.js"></script>
 <script src="./game-rules.js"></script>
 <script>
 "use strict";
@@ -94,7 +101,7 @@ const TERRITORY_SEEDS = [
 const HOUSE_TYPES={0:"dilemma",4:"dilemma",8:"dilemma",12:"dilemma",16:"dilemma",20:"dilemma",24:"dilemma",28:"dilemma",1:"power",5:"power",9:"power",17:"power",21:"power",25:"power",2:"drought",10:"drought",18:"drought",26:"drought",6:"neutral",13:"neutral",14:"neutral",22:"neutral",29:"neutral",30:"neutral"};
 const HOUSE_INFO={dilemma:{name:"Dilema",icon:"⚠️",detail:"Compre uma carta de Dilema. Conversem sobre os impactos e escolham uma resposta honesta ou maquiada."},power:{name:"Power Up",icon:"✦",detail:"Compre uma carta de efeito imediato. Use-a agora e depois descarte."},drought:{name:"Seca",icon:"☀️",detail:"A seca interrompe a rota: recue 2 casas. A água é um recurso comum e limitado."},neutral:{name:"Casa neutra",icon:"·",detail:"Uma casa de passagem. Nenhum efeito é aplicado."}};
 const DILEMMA_CARDS=[
-{id:"dado-contestado",title:"Um dado contestado",theme:"Transparência e metodologia",text:"Uma estimativa citada no caso fala em 500 mL a cada 10 a 50 prompts. Outro estudo citado, do Google, estima valores muito menores por prompt. Os métodos, modelos e locais diferem.",honest:"Apresente as duas estimativas, explique o que cada uma mede e deixe a incerteza visível.",shortcut:"Divulgue apenas o menor número para reduzir a preocupação pública.",why:"A divergência é parte do dilema ético: sem método e contexto, um número pode induzir a erro."},
+{id:"dado-contestado",title:"Um dado contestado",theme:"Transparência e metodologia",text:"Li et al. (2023) estimaram 500 mL para 10–50 respostas médias do GPT-3: somaram resfriamento e água da geração elétrica. Elsworth et al. (2025) mediram 0,26 mL para um prompt mediano do Gemini: água usada no resfriamento do data center. Modelo, local, clima e escopo mudam a conta; não são números diretamente comparáveis.",honest:"Apresente as duas estimativas, diga o que cada uma inclui e deixe a incerteza visível.",shortcut:"Divulgue apenas o menor número para reduzir a preocupação pública.",why:"Sem modelo, local e limite contábil, comparar um número isolado pode induzir a erro."},
 {id:"agua-energia",title:"Água ou energia?",theme:"Nexo água-energia",text:"A equipe reduz a água usada no resfriamento, mas a solução exige mais eletricidade. A origem da energia também tem impactos.",honest:"Compare o consumo direto e indireto de água e energia antes de afirmar que houve redução.",shortcut:"Mostre só a economia de água no local e omita o consumo associado à eletricidade.",why:"Uma troca de impacto não elimina o custo; é preciso mostrar o balanço completo."},
 {id:"consulta",title:"Consulta depois da licença?",theme:"Direito à consulta prévia",text:"O cronograma da obra está apertado. A comunidade Anacé ainda não foi ouvida sobre uma decisão que afeta seu território e sua água.",honest:"Faça a consulta livre, prévia e informada antes da decisão.",shortcut:"Autorize primeiro e consulte a comunidade quando a operação já estiver em andamento.",why:"Participação posterior não substitui o direito de participar antes da decisão."},
 {id:"justica",title:"Quem recebe o benefício?",theme:"Justiça socioambiental",text:"O projeto promete empregos e serviços digitais. O consumo de água e os riscos ficam concentrados nas comunidades próximas.",honest:"Identifique quem recebe benefícios, quem assume os custos e inclua os afetados na decisão.",shortcut:"Some os empregos como benefício geral e deixe os impactos locais fora do balanço.",why:"Distribuir benefícios e danos de forma desigual também é uma escolha ética."},
@@ -124,12 +131,12 @@ const DELIVERY_CARDS=[
 {id:"licenca-condicionada",name:"Licença ambiental condicionada",from:32,to:4,note:"Leve ao Tribunal a proposta de licença com condições e consulta prévia."}
 ];
 const COORDS=[];for(let c=0;c<9;c++)COORDS.push([0,c]);for(let r=1;r<8;r++)COORDS.push([r,8]);for(let c=8;c>=0;c--)COORDS.push([8,c]);for(let r=7;r>0;r--)COORDS.push([r,0]);
-let G=null,rulesSeen=false,toastTimer=0;
-const DEFAULT_SETTINGS={motion:"normal",contrast:false,playerCount:2,names:[]};
+let G=null,rulesSeen=false,toastTimer=0,syncQueue=Promise.resolve();
+const DEFAULT_SETTINGS={motion:"normal",contrast:false,presentation:false,playerCount:2,names:[]};
 let SETTINGS=loadSettings();
 function loadSettings(){try{const saved=JSON.parse(localStorage.getItem("sedeNuvem.settings.v1")||"{}");return Object.assign({},DEFAULT_SETTINGS,saved)}catch(e){return Object.assign({},DEFAULT_SETTINGS)}}
 function saveSettings(){try{localStorage.setItem("sedeNuvem.settings.v1",JSON.stringify(SETTINGS))}catch(e){}}
-function applySettings(){document.body.classList.toggle("high-contrast",!!SETTINGS.contrast);document.body.classList.toggle("reduced-motion",SETTINGS.motion==="reduced")}
+function applySettings(){document.body.classList.toggle("high-contrast",!!SETTINGS.contrast);document.body.classList.toggle("presentation-mode",!!SETTINGS.presentation);document.body.classList.toggle("reduced-motion",SETTINGS.motion==="reduced")}
 function $(id){return document.getElementById(id)}
 function esc(value){return String(value==null?"":value).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
 function shuffle(list){const a=list.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
@@ -138,11 +145,11 @@ function wait(ms){const factor=SETTINGS.motion==="fast"?.55:SETTINGS.motion==="r
 function current(){return G&&G.players[G.pi]}
 function houseTypeAt(index){if(TERRITORY_SEEDS.some(function(t){return t.house-1===index}))return"territory";return HOUSE_TYPES[index]||"neutral"}
 function territoryAt(index){return G&&G.territories?G.territories.find(function(t){return t.house-1===index}):null}
-function isMyTurn(){return!G||!G.online||!!(current()&&current().uid===G.online.uid)}
+function isMyTurn(){return!G||!G.online||!!(G.online.connected!==false&&current()&&current().uid===G.online.uid)}
 function canAct(){return!!(G&&G.game&&rulesSeen&&isMyTurn()&&!G.moving&&!G.rolling&&G.moveRemaining===0&&G.pendingLanding==null&&!G.pendingChoice&&SedeRules.validate(G).length===0)}
-function addLog(message){if(!G)return;G.log=G.log||[];G.log.unshift({round:G.round,text:String(message)});G.log=G.log.slice(0,36);SedeRules.recordLastMove(G,current(),message)}
+function addLog(message){if(!G)return;G.log=G.log||[];G.log.unshift({round:G.round,text:String(message)});G.log=G.log.slice(0,36);G.newsTicker=String(message);SedeRules.recordLastMove(G,current(),message)}
 function toast(message){const el=$("toast");el.textContent=message;el.classList.remove("hidden");clearTimeout(toastTimer);toastTimer=setTimeout(function(){el.classList.add("hidden")},2200)}
-function modal(content,extraClass){$("overlay").classList.remove("hidden");$("modal").className="modal "+(extraClass||"");$("modal").innerHTML=content}
+function modal(content,extraClass){$("overlay").classList.remove("hidden");$("modal").className="modal "+(extraClass||"");$("modal").innerHTML=content;SedeHooks.emit("dialogRendered",{modal:$("modal"),content:content})}
 function closeModal(){$("overlay").classList.add("hidden")}
 function closeInfoModal(){
  closeModal();if(!G||!G.game){showMainMenu();return}
@@ -152,10 +159,10 @@ function closeInfoModal(){
 }
 function setup(){render();showMainMenu()}
 function showMainMenu(){
- const active=!!(G&&G.game),status=active?"Partida em andamento · Rodada "+G.round+" de 10":"Uma mesa para discutir escolhas, água e tecnologia.";
- const resume=active?'<button class="btn primary menu-wide" id="menuContinue" type="button">▶ Continuar partida · vez de '+esc(current().name)+'</button>':'';
- modal('<div class="hero"><div><span class="eyebrow">JOGO DE TABULEIRO DIGITAL · PECÉM, CEARÁ · 2030</span><h1>SEDE DE NUVEM</h1><p>'+status+'</p></div><div class="hero-art" aria-hidden="true"><svg viewBox="0 0 140 100"><path d="M26 53c0-12 9-21 21-21 6-13 27-14 35 0 16-2 27 10 27 22 0 10-8 17-19 17H46c-12 0-20-7-20-18Z"/><path d="M47 77v12h44V77m-35 0v12m26-12v12M42 89h54"/><path d="M68 16c-5 7-9 11-9 16a9 9 0 0 0 18 0c0-5-4-9-9-16Z"/><path d="M46 61h48"/></svg></div></div><div class="setup-section"><h3>O que vamos fazer?</h3><div class="menu-grid">'+resume+'<button class="btn primary menu-wide" id="menuNewGame" type="button">Jogar uma partida</button><button class="btn" id="menuOnline" type="button">Jogar online com outras pessoas</button><button class="btn" id="menuRules" type="button">Ler as regras</button><button class="btn" id="menuGlossary" type="button">Abrir o glossário didático</button><button class="btn" id="menuComponents" type="button">Ver peças e baralhos</button><button class="btn" id="menuSettings" type="button">Ajustar configurações</button></div><p class="card-note">De 2 a 4 jogadores · Escolham os nomes dos marcadores e joguem por turno.</p></div>',"setup-modal menu-modal");
- $("menuNewGame").onclick=showPlayerSetup;if(active)$("menuContinue").onclick=resumeGame;$("menuOnline").onclick=function(){if(window.openOnline)window.openOnline()};$("menuRules").onclick=function(){showRules(false)};$("menuGlossary").onclick=showGlossary;$("menuComponents").onclick=showComponents;$("menuSettings").onclick=showSettings
+ const active=!!(G&&G.game),limit=G&&G.roundLimit||10,status=active?"Partida em andamento · Rodada "+G.round+" de "+limit:"Uma mesa para discutir escolhas, água e tecnologia.";
+ const resume=active?'<button class="btn primary menu-wide" id="menuContinue" type="button">Continuar partida · vez de '+esc(current().name)+'</button>':'';
+ modal('<div class="hero"><div><span class="eyebrow">JOGO DE TABULEIRO DIGITAL · PECÉM, CEARÁ · 2030</span><h1>SEDE DE NUVEM</h1><p>'+status+'</p></div><div class="hero-art" aria-hidden="true"><svg viewBox="0 0 140 100"><path d="M26 53c0-12 9-21 21-21 6-13 27-14 35 0 16-2 27 10 27 22 0 10-8 17-19 17H46c-12 0-20-7-20-18Z"/><path d="M47 77v12h44V77m-35 0v12m26-12v12M42 89h54"/><path d="M68 16c-5 7-9 11-9 16a9 9 0 0 0 18 0c0-5-4-9-9-16Z"/><path d="M46 61h48"/></svg></div></div><div class="setup-section"><h3>O que vamos fazer?</h3><div class="menu-grid">'+resume+'<button class="btn primary menu-wide" id="menuNewGame" type="button"><i class="bi bi-play-circle" aria-hidden="true"></i> Jogar uma partida</button><button class="btn" id="menuDemo" type="button"><i class="bi bi-easel2" aria-hidden="true"></i> Demo rápida · 3 rodadas</button><button class="btn" id="menuOnline" type="button"><i class="bi bi-people" aria-hidden="true"></i> Jogar online</button><button class="btn" id="menuHelp" type="button"><i class="bi bi-journal-richtext" aria-hidden="true"></i> Regras e glossário</button><button class="btn" id="menuComponents" type="button"><i class="bi bi-box-seam" aria-hidden="true"></i> Ver peças e baralhos</button><button class="btn" id="menuSettings" type="button"><i class="bi bi-sliders" aria-hidden="true"></i> Ajustes</button></div><p class="card-note">2–4 marcadores · partida prevista: 20–25 minutos.</p></div>',"setup-modal menu-modal");
+ $("menuNewGame").onclick=showPlayerSetup;if(active)$("menuContinue").onclick=resumeGame;$("menuOnline").onclick=function(){if(window.openOnline)window.openOnline()};$("menuHelp").onclick=function(){showHelp("rules")};$("menuDemo").onclick=startDemo;$("menuComponents").onclick=showComponents;$("menuSettings").onclick=showSettings;SedeHooks.emit("mainMenuRendered",{active:active})
 }
 function resumeGame(){
  if(!G||!G.game){showMainMenu();return}rulesSeen=true;closeModal();render();
@@ -164,22 +171,17 @@ function resumeGame(){
  if(isMyTurn())prepareTurn();sync()
 }
 function showPlayerSetup(){
- modal('<div class="hero"><div><span class="eyebrow">NOVA PARTIDA · TABULEIRO PARA 2 A 4 PESSOAS</span><h1>SEDE DE NUVEM</h1><p>Escolham os nomes dos marcadores. As regras aparecem antes da primeira jogada.</p></div><div class="hero-art" aria-hidden="true">☁️</div></div><div class="setup-section"><label for="playerCount">Quantidade de jogadores</label><select id="playerCount"><option value="2">2 jogadores</option><option value="3">3 jogadores</option><option value="4">4 jogadores</option></select><div id="nameFields" class="name-grid"></div><div class="form-actions"><button class="btn" id="backMenu" type="button">← Voltar ao menu</button><button class="btn" id="onlineSetup" type="button">🌐 Criar ou entrar numa sala</button><button class="btn primary" id="startLocal" type="button">Começar partida →</button></div></div>',"setup-modal");
+ modal('<div class="hero"><div><span class="eyebrow">NOVA PARTIDA · TABULEIRO PARA 2 A 4 PESSOAS</span><h1>SEDE DE NUVEM</h1><p>Cada pessoa escolhe uma cor. O marcador não tem personagem ou habilidade própria.</p></div><div class="hero-art" aria-hidden="true"><i class="bi bi-droplet" aria-hidden="true"></i></div></div><div class="setup-section"><label for="playerCount">Quantidade de jogadores</label><select id="playerCount"><option value="2">2 jogadores</option><option value="3">3 jogadores</option><option value="4">4 jogadores</option></select><div id="nameFields" class="name-grid"></div><div class="form-actions"><button class="btn" id="backMenu" type="button">← Voltar ao menu</button><button class="btn" id="onlineSetup" type="button">Criar ou entrar numa sala</button><button class="btn primary" id="startLocal" type="button">Começar partida →</button></div></div>',"setup-modal");
  $("playerCount").value=String(SETTINGS.playerCount||2);$("playerCount").onchange=renderNameFields;renderNameFields();$("backMenu").onclick=showMainMenu;$("startLocal").onclick=startLocal;$("onlineSetup").onclick=function(){if(window.openOnline)window.openOnline()}
 }
 function renderNameFields(){
- const count=+$("playerCount").value,box=$("nameFields"),saved=[];for(let i=0;i<count;i++){const field=$("playerName"+i);saved.push(field?field.value:"")}
- box.innerHTML="";for(let i=0;i<count;i++){const input=document.createElement("input");input.id="playerName"+i;input.maxLength=18;input.value=saved[i]||SETTINGS.names[i]||("Jogador "+(i+1));input.setAttribute("aria-label","Nome do jogador "+(i+1));box.appendChild(input)}
+ const count=+$("playerCount").value,box=$("nameFields");
+ box.innerHTML=COLORS.slice(0,count).map(function(color,index){return'<div class="marker-choice"><span class="marker-swatch" style="--marker-color:'+esc(color.value)+'">'+(index+1)+'</span><span><b>Marcador '+esc(color.name)+'</b><small>Identificado pela cor</small></span></div>'}).join("")
 }
 function showSettings(){
- modal('<span class="eyebrow">PREFERÊNCIAS DA PARTIDA</span><h2>Configurações</h2><p>Ajuste o ritmo das animações e o contraste para jogar com mais conforto.</p><div class="settings-grid"><div class="setting-card"><label for="motionSetting">Animação do dado e movimento</label><select id="motionSetting"><option value="normal">Normal</option><option value="fast">Rápida</option><option value="reduced">Reduzida</option></select><small>“Reduzida” diminui movimento e efeitos visuais.</small></div><label class="setting-toggle"><input type="checkbox" id="contrastSetting"><span><b>Alto contraste</b><small>Reforça bordas e áreas importantes.</small></span></label></div><div class="form-actions"><button class="btn" id="cancelSettings" type="button">Voltar</button><button class="btn primary" id="saveSettings" type="button">Salvar preferências</button></div>');
- $("motionSetting").value=SETTINGS.motion;$("contrastSetting").checked=!!SETTINGS.contrast;$("cancelSettings").onclick=function(){if(G&&G.game)resumeGame();else showMainMenu()};
- $("saveSettings").onclick=function(){SETTINGS.motion=$("motionSetting").value;SETTINGS.contrast=$("contrastSetting").checked;saveSettings();applySettings();if(G&&G.game)resumeGame();else showMainMenu();toast("Preferências salvas.")}
-}
-function startLocal(){
- const count=+$("playerCount").value,roster=[];for(let i=0;i<count;i++)roster.push({name:$("playerName"+i).value.trim()||("Jogador "+(i+1)),color:COLORS[i].value});
- if(window.clearSavedLocalGame)window.clearSavedLocalGame();if(G&&G.online&&window.leaveOnline)window.leaveOnline();SETTINGS.playerCount=count;SETTINGS.names=roster.map(function(p){return p.name});saveSettings();
- G=makeGame(roster,null);rulesSeen=false;render();showRules(true);sync()
+ modal('<span class="eyebrow">PREFERÊNCIAS DA MESA</span><h2>Configurações</h2><div class="settings-grid"><div class="setting-card"><label for="motionSetting">Ritmo das animações</label><select id="motionSetting"><option value="normal">Normal</option><option value="fast">Rápido</option><option value="reduced">Reduzido</option></select><small>Escolha o ritmo para a apresentação.</small></div><div class="setting-card"><label for="settingsPlayerCount">Marcadores na demonstração</label><select id="settingsPlayerCount"><option value="2">2 marcadores</option><option value="3">3 marcadores</option><option value="4">4 marcadores</option></select><small>A distribuição de territórios segue o roteiro.</small></div><label class="setting-toggle"><input type="checkbox" id="contrastSetting"><span><b>Alto contraste</b><small>Reforça textos e áreas importantes.</small></span></label><label class="setting-toggle"><input type="checkbox" id="presentationSetting"><span><b>Modo apresentação</b><small>Oculta ações secundárias e amplia a leitura.</small></span></label></div><div class="form-actions"><button class="btn" id="cancelSettings" type="button">Voltar</button><button class="btn primary" id="saveSettings" type="button">Salvar preferências</button></div>');
+ $("motionSetting").value=SETTINGS.motion;$("settingsPlayerCount").value=String(SETTINGS.playerCount||2);$("contrastSetting").checked=!!SETTINGS.contrast;$("presentationSetting").checked=!!SETTINGS.presentation;$("cancelSettings").onclick=function(){if(G&&G.game)resumeGame();else showMainMenu()};
+ $("saveSettings").onclick=function(){SETTINGS.motion=$("motionSetting").value;SETTINGS.playerCount=Number($("settingsPlayerCount").value);SETTINGS.contrast=$("contrastSetting").checked;SETTINGS.presentation=$("presentationSetting").checked;saveSettings();applySettings();if(G&&G.game)resumeGame();else showMainMenu();toast("Preferências salvas.")}
 }
 function initiative(players){
   let rolls=players.map(function(p){return{id:p.id,roll:d6()}}),top=Math.max.apply(null,rolls.map(function(x){return x.roll})),ties=rolls.filter(function(x){return x.roll===top});
@@ -187,39 +189,72 @@ function initiative(players){
   rolls.sort(function(a,b){return b.roll-a.roll});const byId=new Map(players.map(function(p){return[p.id,p]}));
   return{players:rolls.map(function(x){const p=byId.get(x.id);p.initiative=x.roll;return p}),description:rolls.map(function(x){return byId.get(x.id).name+" "+x.roll}).join(", ")}
 }
-function makeGame(roster,online){
+function makeGame(roster,online,options){
   const usedColors=new Set();
   const players=roster.map(function(p,i){let chosen=COLORS.find(function(c){return c.value===p.color});if(!chosen||usedColors.has(chosen.value))chosen=COLORS.find(function(c){return!usedColors.has(c.value)});usedColors.add(chosen.value);return{id:"P"+(i+1),uid:p.uid||null,name:String(p.name||("Jogador "+(i+1))).slice(0,18),color:chosen.value,colorName:chosen.name,pos:0,score:0,deliveries:0,cargo:null,skipNext:false,preparedTurnId:-1,initiative:0,territoryIds:[]}});
-  const order=initiative(players),ordered=order.players,per=ordered.length===2?3:2,dealt=shuffle(TERRITORY_SEEDS.map(function(t){return Object.assign({},t)}));
-  ordered.forEach(function(p,i){const pack=dealt.splice(0,per);pack.forEach(function(t){p.territoryIds.push(t.id)})});
-  const map=TERRITORY_SEEDS.map(function(seed){let owner=null;for(let i=0;i<ordered.length;i++)if(ordered[i].territoryIds.includes(seed.id))owner=i;return Object.assign({},seed,{owner:owner})});
-  ordered.forEach(function(p){p.pos=0});
+  const order=initiative(players),ordered=order.players,settings=options||{};let dealt=shuffle(TERRITORY_SEEDS.map(function(t){return Object.assign({},t)}));
+  if(settings.demo){const count=ordered.length,perPlayer=count===2?3:2,tribunal=TERRITORY_SEEDS.find(function(t){return t.house===4}),aldeia=TERRITORY_SEEDS.find(function(t){return t.house===8}),others=shuffle(TERRITORY_SEEDS.filter(function(t){return t.house!==4&&t.house!==8}));dealt=[tribunal].concat(others.slice(0,perPlayer-1),[aldeia],others.slice(perPlayer-1))}
+  const distribution=SedeRules.dealTerritories(TERRITORY_SEEDS,ordered.map(function(p){return p.id}),dealt.map(function(t){return t.id}));
+  distribution.assignments.forEach(function(assignment){const player=ordered.find(function(p){return p.id===assignment.playerId});player.territoryIds=assignment.territoryIds});
+  const map=distribution.territories;
+  ordered.forEach(function(p){const first=TERRITORY_SEEDS.find(function(t){return t.id===p.territoryIds[0]});p.pos=settings.demo&&first?first.house-1:0});
   const powerDeck=shuffle(POWER_CARDS.flatMap(function(card){return[Object.assign({},card),Object.assign({},card),Object.assign({},card)]}));
-  const game={players:ordered,pi:0,round:1,turnSerial:0,aquifer:10,territories:map,deliveryDeck:shuffle(DELIVERY_CARDS),deliveryDiscard:[],dilemmaDeck:shuffle(DILEMMA_CARDS),dilemmaDiscard:[],powerDeck:powerDeck,powerDiscard:[],deliveriesThisRound:0,rebateBlockedRound:0,rolled:false,rolling:false,moving:false,lastRoll:0,game:true,started:true,log:[],pendingLanding:null,pendingChoice:null,combat:null,usedDeliveries:[],online:online||null,turnNotice:"",turnNoticeSerial:-1};
+  const game={version:2,revision:0,sessionId:"game-"+Date.now()+"-"+Math.random().toString(36).slice(2,8),startedAt:Date.now(),players:ordered,pi:0,round:1,roundLimit:settings.demo?3:10,turnSerial:0,aquifer:10,territories:map,deliveryDeck:shuffle(DELIVERY_CARDS),deliveryDiscard:[],dilemmaDeck:shuffle(DILEMMA_CARDS),dilemmaDiscard:[],powerDeck:powerDeck,powerDiscard:[],deliveriesThisRound:0,rebateBlockedRound:0,auditCount:0,auditFinds:0,reboundCount:0,rolled:false,rolling:false,moving:false,lastRoll:0,game:true,started:true,log:[],pendingLanding:null,pendingChoice:null,combat:null,usedDeliveries:[],online:online||null,turnNotice:"",turnNoticeSerial:-1,demoMode:!!settings.demo,decisions:[],deliveryResults:[],events:[],ethicalCounters:{},newsTicker:"A partida começa no tabuleiro do Pecém."};
   game.log.push({round:1,text:"O maior resultado no dado define a ordem: "+order.description+"."});
-  game.log.push({round:1,text:"Territórios sorteados. Cada marcador começa no primeiro território que recebeu."});
+  game.log.push({round:1,text:"Territórios sorteados conforme o número de marcadores. Todos começam na casa 1."});
   game.log.push({round:1,text:"O objetivo é concluir entregas sem deixar o aquífero chegar a zero."});
-  return game
+  return SedeRules.normalize(game)
 }
 function startLocal(){
-  const count=+$("playerCount").value,roster=[];for(let i=0;i<count;i++)roster.push({name:$("playerName"+i).value.trim()||("Jogador "+(i+1)),color:COLORS[i].value});
+  const count=+$('playerCount').value,roster=COLORS.slice(0,count).map(function(color){return{name:"Marcador "+color.name,color:color.value}});
   if(window.clearSavedLocalGame)window.clearSavedLocalGame();if(G&&G.online&&window.leaveOnline)window.leaveOnline();SETTINGS.playerCount=count;SETTINGS.names=roster.map(function(p){return p.name});saveSettings();
-  G=makeGame(roster,null);rulesSeen=false;render();showRules(true);sync()
+  G=makeGame(roster,null);SedeHooks.emit("gameCreated",G);rulesSeen=false;render();showRules(true);sync()
+}
+function startDemo(){
+ const count=Number(SETTINGS.playerCount)||2,roster=COLORS.slice(0,count).map(function(color){return{name:"Marcador "+color.name,color:color.value}});
+ if(window.clearSavedLocalGame)window.clearSavedLocalGame();if(G&&G.online&&window.leaveOnline)window.leaveOnline();
+ G=makeGame(roster,null,{demo:true});G.demoMode=true;G.roundLimit=3;G.demoRolls=[4,2,3,5,2,4,1,6,3,2,5,1];
+ const target=G.players[1],sample=DELIVERY_CARDS.find(function(card){return card.id==="dados-auditaveis"});
+ if(target&&sample){target.cargo=Object.assign({},sample,{pickedUp:true,maquiada:true,serviceLevel:"standard",expiresRound:3});G.deliveryDeck=G.deliveryDeck.filter(function(card){return card.id!==sample.id});G.demoAuditTargetId=target.id}
+ SETTINGS.presentation=true;SETTINGS.contrast=true;saveSettings();applySettings();SedeHooks.emit("gameCreated",G);rulesSeen=true;closeModal();render();addLog("Demonstração iniciada: a primeira rota prepara uma Disputa e a carga maquiada fica disponível para Auditoria.");render();prepareTurn();toast("Demo rápida · mesa preparada para 3 rodadas.")
+}
+function triggerDemoDilemma(){
+ if(!G||!G.game||!G.demoMode)return;
+ if(G.pendingChoice||G.pendingLanding!==null&&G.pendingLanding!==undefined||G.combat){toast("Conclua a decisão aberta antes de chamar outro dilema.");return}
+ drawDilemma()
+}
+function triggerDemoAudit(){
+ if(!G||!G.game||!G.demoMode)return;
+ const target=G.players.find(function(player){return player.id===G.demoAuditTargetId});
+ if(!target||!target.cargo){toast("A carga maquiada de demonstração já foi auditada.");return}
+ const result=SedeRules.applyAudit(G,target.id);G=result.state;
+ addLog(result.outcome.revealed?"Auditoria independente: "+target.name+" devolveu a carga e perdeu 2 pontos.":"Auditoria independente: os dados da carga de "+target.name+" estavam transparentes.");
+ render();toast(result.outcome.revealed?"Auditoria confirmou a maquiagem · −2 pontos.":"A carga passou pela auditoria.")
 }
 function showRules(intro){
-  const title=intro?"Antes da primeira jogada":"Como jogar · Sede de Nuvem";
-  modal('<span class="eyebrow">'+(intro?"LEIA ANTES DE COMEÇAR":"GUIA DA PARTIDA")+'</span><h2>'+title+'</h2><p>Jogo semicooperativo para estudantes de Engenharia de Software e Ciência da Computação. Os peões são apenas marcadores; ninguém recebe habilidade ou meta individual.</p><div class="rule-callout"><b>Objetivo:</b> entregar cargas e somar pontos sem deixar o aquífero secar. Se a água chegar a 0, todos perdem. Com água acima de 0, vence quem tiver mais pontos ao fim da partida.</div><div class="rule-grid"><div class="rule-item"><b>1 · Preparação</b>São 2 a 4 jogadores. Sorteiem 8 territórios: com 2 jogadores, cada um recebe 3 e 2 ficam neutros; com 3, cada um recebe 2 e 2 ficam neutros; com 4, cada um recebe 2. Todos os peões começam na casa 1 do tabuleiro. O maior resultado no dado começa; empate é rolado de novo.</div><div class="rule-item"><b>2 · Sua vez e a carta de Entrega</b>Se não tiver carga ativa, compre uma carta e escolha o SLA padrão (3 rodadas) ou expresso (2 rodadas; aquífero −1). Passe pela origem para coletar e termine no destino dentro do prazo. Atraso ou carga perdida em Disputa devolve a carta sem tirar pontos.</div><div class="rule-item"><b>3 · Movimento e casas</b>Role 1 dado de 6 faces e avance pelo anel de 32 casas. Territórios estão nas casas 4, 8, 12, 16, 20, 24, 28 e 32. Dilema: compre uma carta e escolha uma resposta honesta ou maquiada. Power Up: efeito imediato. Seca: recue 2. Casa neutra: sem efeito.</div><div class="rule-item"><b>4 · Disputa por território</b>Só acontece se você terminar o movimento no território de outro jogador; passar por ele não basta. Ataque e defesa rolam um dado. Se o atacante tirar mais, toma o território. Se o defensor tirar mais, mantém o território e o atacante recua 2 casas e devolve a carga. Empate: o defensor mantém, o atacante recua 1 casa e conserva a carga.</div><div class="rule-item"><b>5 · Pontos, honestidade e Power Ups</b>Entrega honesta no prazo: +3 pontos e 1 Power Up imediato. Entrega maquiada não descoberta: +4 pontos, mas o aquífero já caiu 1 na escolha. Auditoria revela a carga maquiada: devolva-a e perca 2 pontos. Cada território controlado no fim vale +1 ponto.</div><div class="rule-item"><b>6 · Fim da partida e efeito rebote</b>A partida termina após a rodada 10 ou quando alguém concluir 3 entregas. Se 2 ou mais entregas terminarem na mesma rodada, o aquífero cai 1, a menos que o SLM tenha bloqueado o efeito. Se o aquífero chegar a 0, todos perdem.</div></div><div class="form-actions"><button class="btn primary" id="closeRules" type="button">'+(intro?"Entendi · começar a partida":"Voltar ao jogo")+'</button></div>',"rules-modal");
+  const title=intro?"Antes da primeira rota":"Como jogar";
+  modal('<span class="eyebrow">'+(intro?"CADERNO DE CAMPO · PREPARAÇÃO":"GUIA RÁPIDO")+'</span><h2>'+title+'</h2><p>Peões são marcadores de cor. A mesa disputa pontos enquanto protege a água comum.</p><div class="rule-callout"><b>Meta:</b> concluam entregas sem deixar o aquífero chegar a zero. Água zero significa derrota coletiva.</div><div class="rule-grid compact-rules"><div class="rule-item"><b>ROTA</b>Role um dado e siga pelo anel de 32 casas. A casa onde parar define o próximo registro.</div><div class="rule-item"><b>ENTREGA</b>Escolha prazo padrão (3 rodadas) ou expresso (2; aquífero −1). Colete na origem e chegue ao destino a tempo.</div><div class="rule-item"><b>ESCOLHAS</b>Dilemas oferecem transparência ou atalho. Colegas podem acionar o Tribunal, negociar ou passar.</div><div class="rule-item"><b>FECHAMENTO</b>Com 3 entregas ou ao fim da rodada 10, vence a maior pontuação; cada território vale +1. Duas entregas na rodada causam rebote, salvo bloqueio do SLM.</div></div><details class="rules-detail"><summary>Disputa, atraso e fiscalização</summary><p>Parar em território alheio abre Disputa: ataque maior toma o local; defesa maior recua o atacante 2 casas e devolve a carga; empate recua 1 e mantém a carga. Carga atrasada volta sem desconto. Auditoria de carga maquiada devolve a carta e tira 2 pontos.</p></details><details class="rules-detail"><summary>Contrato regional e sinergias</summary><p>Conectem Porto, Parque Eólico e Data Center até a rodada 6; duas pessoas precisam participar. O Tribunal recupera fichas, a Aldeia Anacé prepara bônus para entrega transparente e o Parque Eólico reduz a pegada de uma entrega expressa. A escala de água e pegada é didática.</p></details><div class="form-actions"><button class="btn primary" id="closeRules" type="button">'+(intro?"Entendi · começar":"Voltar ao jogo")+'</button></div>',"rules-modal");
   $("closeRules").onclick=function(){closeModal();rulesSeen=true;if(G&&G.game)resumeGame();else showMainMenu()}
-}
-function showComponents(){
+}function showComponents(){
   modal('<span class="eyebrow">PROTÓTIPO FÍSICO · MATERIAIS RECICLADOS</span><h2>O que existe no tabuleiro</h2><p>O jogo digital mantém as quantidades e a lógica da versão de tabuleiro analógica.</p><div class="component-grid"><div class="component"><b>1 tabuleiro</b><br>Anel de 32 casas e trilha do aquífero de 10 a 0. Papelão de caixa e papel reutilizado.</div><div class="component"><b>4 marcadores</b><br>Uma cor por peão. Tampinhas de garrafa.</div><div class="component"><b>8 cartas de território</b><br>Uma para cada lugar do mapa. Papel ou cartolina reaproveitada.</div><div class="component"><b>Até 32 fichas de controle</b><br>8 por cor, feitas de papel ou papelão reaproveitado.</div><div class="component"><b>8 cartas de Entrega</b><br>Origem, destino, SLA padrão de 3 rodadas ou expresso de 2.</div><div class="component"><b>10 cartas de Dilema</b><br>Escolhas de transparência, água, energia e justiça.</div><div class="component"><b>18 cartas de Power Up</b><br>6 tipos, 3 cópias de cada, com efeito imediato.</div><div class="component"><b>1 dado de 6 faces</b><br>O mesmo dado serve para movimento e Disputas.</div></div><h3>Temas éticos presentes nas cartas</h3><p class="card-note">Pegada hídrica · Semiárido · Justiça socioambiental · Consulta prévia (Anacé) · Transparência / Greenwashing · Efeito rebote (Jevons) · Nexo água-energia · Green AI · Licença social · Princípio da responsabilidade.</p><div class="rule-callout">No protótipo físico, cada jogador usa apenas a cor do seu marcador. Não há poderes ou histórias próprios dos peões.</div><div class="form-actions"><button class="btn primary" id="closeModalBtn" type="button">Fechar</button></div>');
   $("closeModalBtn").onclick=closeInfoModal
 }
 function showGlossary(){
- const terms=[["Aquífero","Reserva de água subterrânea compartilhada. No jogo, a escala didática vai de 0 a 10 e não representa litros."],["Pegada hídrica","Indicador simplificado do uso de água associado às escolhas de cada jogador."],["Pegada energética","Indicador didático de energia consumida pelas rotas e serviços escolhidos."],["Nexo água-energia","Relação entre água e energia: reduzir um impacto pode aumentar o outro."],["Efeito rebote","A eficiência por tarefa pode aumentar o uso total quando a demanda cresce."],["Consulta prévia","Participação livre, prévia e informada da comunidade antes de uma decisão que afeta seu território."],["Greenwashing","Apresentação ambiental seletiva que omite dados, limites ou impactos relevantes."],["SLA","Acordo de nível de serviço: prazo escolhido para cumprir uma entrega. O padrão leva 3 rodadas; o expresso, 2."],["Entrega Expressa","Serviço de alta demanda: encurta o prazo e vale mais pontos, mas reduz o aquífero e amplia a pegada."],["Contrato compartilhado","Missão de equipe para conectar Porto, Parque Eólico e Data Center dentro do prazo."],["Intervenção","Ficha de reação usada para acionar o Tribunal e bloquear um atalho; o Tribunal pode conceder fichas extras."]];
+ const terms=[["Aquífero","Reserva de água subterrânea compartilhada pela região."],["Pegada hídrica","Pressão que o uso de água deixa sobre um recurso comum."],["Pegada energética","Energia associada a uma atividade ou serviço."],["Nexo água–energia","Relação entre água usada no resfriamento e energia consumida pela infraestrutura."],["Efeito rebote","Quando a eficiência por tarefa estimula demanda e aumenta o consumo total."],["Consulta prévia","Participação livre, prévia e informada de uma comunidade afetada."],["Greenwashing","Comunicação ambiental que omite dados ou impactos relevantes."],["SLA","Acordo que define o prazo de uma entrega."],["Entrega expressa","Modalidade de despacho com prazo curto e alta demanda."],["Contrato compartilhado","Objetivo regional construído com a participação de mais de uma pessoa."],["Intervenção","Ação de fiscalização ou negociação sobre uma decisão da partida."],["Carga maquiada","Entrega cuja informação ambiental foi omitida ou apresentada sem transparência."]];
  const items=terms.map(function(item){return'<div class="rule-item"><b>'+esc(item[0])+'</b>'+esc(item[1])+'</div>'}).join("");
- modal('<span class="eyebrow">REFERÊNCIA RÁPIDA</span><h2>Glossário didático</h2><p>Os números de pegada e de aquífero são unidades de jogo, não estimativas reais de consumo.</p><div class="rule-grid glossary-grid">'+items+'</div><div class="form-actions"><button class="btn primary" id="closeGlossary" type="button">Fechar</button></div>');
+ modal('<span class="eyebrow">CADERNO DE CAMPO · TERMOS</span><h2>Glossário</h2><p>Água, energia e pegada são escalas didáticas; a partida não estima consumo real.</p><div class="rule-grid glossary-grid">'+items+'</div><div class="form-actions"><button class="btn primary" id="closeGlossary" type="button">Voltar ao jogo</button></div>');
  $("closeGlossary").onclick=closeInfoModal
+}
+function showHelp(section){
+ const selected=section==="glossary"?"glossary":"rules";
+ if(selected==="glossary")showGlossary();else showRules(false);
+ const box=$("modal"),eyebrow=box.querySelector(".eyebrow");
+ if(!box)return;
+ box.classList.add("help-modal");
+ const tabs=document.createElement("nav");tabs.className="help-tabs";tabs.setAttribute("aria-label","Ajuda do jogo");
+ tabs.innerHTML='<button class="help-tab" id="helpRulesTab" type="button" aria-current="'+(selected==="rules"?"page":"false")+'"><i class="bi bi-book" aria-hidden="true"></i> Como jogar</button><button class="help-tab" id="helpGlossaryTab" type="button" aria-current="'+(selected==="glossary"?"page":"false")+'"><i class="bi bi-journal-bookmark" aria-hidden="true"></i> Termos do jogo</button>';
+ if(eyebrow&&eyebrow.nextSibling)box.insertBefore(tabs,eyebrow.nextSibling);else box.insertBefore(tabs,box.firstChild);
+ $("helpRulesTab").onclick=function(){showHelp("rules")};$("helpGlossaryTab").onclick=function(){showHelp("glossary")};
 }
 function houseCardText(index){
   const territory=territoryAt(index);
@@ -234,12 +269,13 @@ function showHouseCard(index,readOnly){
 function land(index){G.pendingLanding=index;render();showHouseCard(index,false);sync()}
 async function resolveLanding(index){
   if(!G||!G.game||G.pendingLanding!==index||!isMyTurn()||!SedeRules.canPerform(G,"resolve",current()&&current().id))return;
-  G.pendingLanding=null;G.previewTarget=null;closeModal();const p=current(),type=houseTypeAt(index);
+  G.pendingLanding=null;G.previewTarget=null;closeModal();let p=current();const type=houseTypeAt(index);
   if(type==="territory"){
     const t=territoryAt(index);
     if(t&&t.owner!=null&&t.owner!==G.pi){await resolveDispute(t);if(!G.game)return}
+    p=current();
     if(p.pos!==index){render();await sync();return}
-    if(t){const result=SedeRules.visitContractSite(G,p,t.id);if(result)addLog(result.message)}
+    if(t){const contract=SedeRules.visitContractSiteState(G,p.id,t.id);G=contract.state;if(contract.result)addLog(contract.result.message)}
     const at=territoryAt(p.pos);if(at&&p.cargo&&p.cargo.pickedUp&&at.house===p.cargo.to)completeDelivery(p,at);
     render();await sync();return
   }
@@ -253,11 +289,11 @@ async function resolveLanding(index){
   }
   addLog(p.name+" parou em uma casa neutra.");render();await sync()
 }
-async function retreat(player,amount){for(let n=0;n<amount;n++){player.pos=(player.pos+31)%32;render();await sync();await wait(120)}}
+async function retreat(player,amount){const playerId=player.id;for(let n=0;n<amount;n++){const moved=SedeRules.movePlayer(G,playerId,-1);if(!moved.valid)return;G=moved.state;render();await sync();await wait(120)}}
 function drawDilemma(){
-  if(!G.dilemmaDeck.length){G.dilemmaDeck=shuffle(G.dilemmaDiscard);G.dilemmaDiscard=[]}
-  const card=G.dilemmaDeck.pop();if(!card){addLog("O baralho de Dilemas acabou.");render();sync();return}
-  G.dilemmaDiscard.push(card);G.pendingChoice={type:"dilemma",card:card};render();showDilemma(card,false);sync()
+  if(!G.dilemmaDeck.length){G=SedeRules.recycleDeck(G,"dilemma",shuffle(G.dilemmaDiscard)).state}
+  const drawn=SedeRules.drawChoiceCard(G,"dilemma");G=drawn.state;const card=drawn.card;if(!card){addLog("O baralho de Dilemas acabou.");render();sync();return}
+  render();showDilemma(card,false);sync()
 }
 function showDilemma(card,readOnly){
   const actor=current(),choices=readOnly?'<div class="status-msg">Aguardando '+esc(actor.name)+' escolher e explicar a decisão ao grupo.</div>':'<div class="choice-grid"><button class="choice" id="honestChoice" type="button">🌿 Resposta honesta<small>'+esc(card.honest)+'</small></button><button class="choice risky" id="riskyChoice" type="button">⚡ Atalho maquiado<small>'+esc(card.shortcut)+'</small></button></div>';
@@ -266,16 +302,17 @@ function showDilemma(card,readOnly){
 }
 async function resolveDilemma(honest,card){
   if(!G||!G.pendingChoice||G.pendingChoice.type!=="dilemma"||!isMyTurn()||!SedeRules.canPerform(G,"resolve",current()&&current().id))return;
-  G.pendingChoice=null;closeModal();const p=current();
+  if(!honest&&!G.bypassCouncil&&SedeHooks.request("beforeDilemma",{card:card,player:current()}))return;
+  G.pendingChoice=null;closeModal();const result=SedeRules.applyDilemma(G,current().id,honest);if(!result.valid)return;G=result.state;const p=current(),outcome=result.outcome;
+  SedeHooks.emit("dilemmaResolved",{honest:!!honest,card:card,player:p});
   if(honest){addLog(p.name+" escolheu honestidade em “"+card.title+"”. Comprou um Power Up.");render();await sync();drawPowerUp("resposta honesta ao dilema");return}
-  if(p.cargo)p.cargo.maquiada=true;SedeRules.changeAquifer(G,-1,"Atalho maquiado");SedeRules.recordFootprint(p,{water:2,energy:1});
   addLog(p.name+" escolheu o atalho maquiado em “"+card.title+"”: avançou 3 casas e o aquífero caiu 1.");render();await sync();
   if(G.aquifer<=0){endGame(true);return}await movePawn(3,true)
 }
 function drawPowerUp(reason){
-  if(!G.powerDeck.length){G.powerDeck=shuffle(G.powerDiscard);G.powerDiscard=[]}
-  const card=G.powerDeck.pop();if(!card){addLog("O baralho de Power Ups acabou.");render();sync();return}
-  G.pendingChoice={type:"power",card:card,reason:reason};render();showPowerCard(card,reason,false);sync()
+  if(!G.powerDeck.length){G=SedeRules.recycleDeck(G,"power",shuffle(G.powerDiscard)).state}
+  const drawn=SedeRules.drawChoiceCard(G,"power",reason);G=drawn.state;const card=drawn.card;if(!card){addLog("O baralho de Power Ups acabou.");render();sync();return}
+  render();showPowerCard(card,reason,false);sync()
 }
 function showPowerCard(card,reason,readOnly){
   const actor=current();let extra="";
@@ -288,68 +325,64 @@ function showPowerCard(card,reason,readOnly){
 }
 async function usePowerUp(card,targetIndex){
   if(!G||!G.pendingChoice||G.pendingChoice.type!=="power"||!isMyTurn()||!SedeRules.canPerform(G,"resolve",current()&&current().id))return;
-  G.pendingChoice=null;closeModal();G.powerDiscard.push(card);const p=current();
-  if(card.id==="atalho"){addLog(p.name+" usou Atalho da imprensa: avançou 2 casas.");render();await sync();await movePawn(2,true);return}
-  if(card.id==="circuito"){SedeRules.changeAquifer(G,1,"Circuito fechado");addLog(p.name+" usou Circuito fechado: aquífero +1.")}
-  if(card.id==="slm"){G.rebateBlockedRound=G.round;addLog(p.name+" usou o SLM: efeito rebote bloqueado nesta rodada.")}
-  if(card.id==="liminar"){const target=G.players[targetIndex];if(target){target.skipNext=true;addLog(p.name+" usou Liminar: "+target.name+" perderá a próxima jogada.")}}
-  if(card.id==="consulta"){const t=territoryAt(p.pos);if(t){const previous=t.owner;t.owner=G.pi;addLog(p.name+" usou Consulta prévia realizada e assumiu "+t.name+(previous===G.pi?" novamente":".")+" sem Disputa.")}else addLog("Consulta prévia realizada foi descartada: o peão não estava em um território.")}
-  if(card.id==="auditoria"){const target=G.players[targetIndex];if(target&&target.cargo){if(target.cargo.maquiada){target.score-=2;returnCargo(target,"Auditoria independente revelou greenwashing");addLog("A auditoria revelou a carga maquiada de "+target.name+": −2 pontos e carga devolvida.")}else addLog("Auditoria independente revelou uma carga sem maquiagem de "+target.name+".")}else if(target)addLog("A auditoria não encontrou carga ativa de "+target.name+".")}
+  SedeHooks.emit("powerUpUsed",{card:card,targetIndex:targetIndex,player:current()});
+  const actor=current(),target=targetIndex==null?null:G.players[targetIndex],before=target&&target.id===actor.id?null:target&&target.id;
+  G.pendingChoice=null;closeModal();const transition=SedeRules.applyPowerEffect(G,actor.id,card.id,before);if(!transition.valid){toast("Esse Power Up não pode ser aplicado nesta casa.");return}const discarded=SedeRules.discardPowerCard(transition.state,card);G=discarded.state;const p=current();
+  if(card.id==="atalho"){addLog(p.name+" usou Atalho da imprensa: avançou 2 casas.");render();await sync();await movePawn(transition.outcome.movement,true);return}
+  if(card.id==="circuito")addLog(p.name+" usou Circuito fechado: aquífero +1.");
+  if(card.id==="slm")addLog(p.name+" usou o SLM: efeito rebote bloqueado nesta rodada.");
+  if(card.id==="liminar"&&target)addLog(p.name+" usou Liminar: "+target.name+" perderá a próxima jogada.");
+  if(card.id==="consulta"){const t=territoryAt(p.pos);if(t)addLog(p.name+" usou Consulta prévia realizada e assumiu "+t.name+" sem Disputa.");else addLog("Consulta prévia realizada foi descartada: o peão não estava em um território.")}
+  if(card.id==="auditoria"&&target){const audit=transition.outcome.audit,audited=G.players.find(function(item){return item.id===target.id});if(audit.revealed)addLog("A auditoria revelou a carga maquiada de "+audited.name+": −2 pontos e carga devolvida.");else if(audit.found)addLog("Auditoria independente revelou uma carga sem maquiagem de "+audited.name+".");else addLog("A auditoria não encontrou carga ativa de "+audited.name+".")}
   render();await sync()
 }
-function returnCargo(player,reason){
-  if(!player.cargo)return;const card=player.cargo;G.deliveryDiscard.push(DELIVERY_CARDS.find(function(c){return c.id===card.id})||{id:card.id,name:card.name,from:card.from,to:card.to,note:card.note});
-  player.cargo=null;addLog(player.name+" devolveu a carta de Entrega: "+reason+".")
-}
 function drawDelivery(player){
-  if(!G.deliveryDeck.length){G.deliveryDeck=shuffle(G.deliveryDiscard);G.deliveryDiscard=[]}
-  const card=G.deliveryDeck.pop();if(!card){addLog("Não há cartas de Entrega disponíveis.");return}
-  player.cargo=Object.assign({},card,{pickedUp:false,maquiada:false,serviceLevel:null,expiresRound:G.round+3});G.pendingChoice={type:"delivery",playerId:player.id,card:player.cargo};addLog(player.name+" recebeu a carta de Entrega “"+card.name+"”.");
-  render();showDeliveryCard(player.cargo,false);sync()
+  if(!G.deliveryDeck.length){G=SedeRules.recycleDeck(G,"delivery",shuffle(G.deliveryDiscard)).state}
+  const drawn=SedeRules.drawDeliveryCard(G,player.id);G=drawn.state;const card=drawn.card;if(!card){addLog("Não há cartas de Entrega disponíveis.");return}
+  addLog(player.name+" recebeu a carta de Entrega “"+card.name+"”.");render();showDeliveryCard(card,false);sync()
 }
 function showDeliveryCard(card,readOnly){
   const actor=current(),from=TERRITORY_SEEDS.find(function(t){return t.house===card.from}),to=TERRITORY_SEEDS.find(function(t){return t.house===card.to}),standard=SedeRules.deliveryPreview(G,actor,"standard"),express=SedeRules.deliveryPreview(G,actor,"express");
   const protocol=String((card.id||"").split("").reduce(function(sum,ch){return sum+ch.charCodeAt(0)},0)).padStart(4,"0");
-  const action=readOnly?'<div class="status-msg">Aguardando '+esc(actor.name)+' escolher o prazo e o nível de demanda.</div>':'<div class="delivery-levels"><button class="choice" id="acceptStandard" type="button">PADRÃO · S-01<small>3 rodadas · +3 pontos transparente / +4 maquiada · sem custo extra no aquífero</small></button><button class="choice risky" id="acceptExpress" type="button">EXPRESSA · IA-02<small>2 rodadas · +5 / +6 pontos · aquífero −1 agora · '+(express.windCredit?'crédito eólico reduz a pegada energética':'maior pegada hídrica e energética')+'</small></button></div>';
-  modal('<span class="eyebrow">ORDEM DE DESPACHO · ESCOLHA DE SLA</span><div class="cards-face"><span class="card-label">REGISTRO DE CARGA · PECÉM / 2030</span><div class="dispatch-meta"><span>PROTOCOLO<br>PEC-'+protocol+'</span><span>ROTA<br>'+esc(from?from.short:"ORIGEM")+' → '+esc(to?to.short:"DESTINO")+'</span><span class="dispatch-stamp">RISCO HÍDRICO</span></div><h3>'+esc(card.name)+'</h3><p>'+esc(card.note)+'</p><div class="cargo-route"><span>Origem: '+esc(from?from.name:"Território")+'</span><span>Destino: '+esc(to?to.name:"Território")+'</span></div><p class="card-note">Passe pela origem para coletar a carga. Compare prazo, recompensa e impacto antes de despachar.</p></div><div class="delivery-preview-grid"><div><b>'+standard.level+'</b><small>'+standard.summary+'</small></div><div><b>'+express.level+'</b><small>'+express.summary+'</small></div></div>'+action);
+  const standardImpact="+"+standard.honestPoints+" transparente / +"+standard.disguisedPoints+" maquiada · sem custo extra no aquífero";
+  const expressWater=express.aquiferDelta<0?"aquífero −"+Math.abs(express.aquiferDelta):"aquífero estável";
+  const expressImpact="+"+express.honestPoints+" / +"+express.disguisedPoints+" pontos · "+expressWater+" · "+(express.windCredit?"crédito eólico reduz pegada energética":"pegada energética maior");
+  const action=readOnly?'<div class="status-msg">Aguardando '+esc(actor.name)+' escolher o despacho.</div>':'<div class="delivery-decision"><span>Escolha o prazo</span><small>O carimbo indica o custo comum de cada rota.</small></div><div class="delivery-levels"><button class="choice delivery-choice" id="acceptStandard" type="button"><span class="delivery-choice-code"><i class="bi bi-droplet" aria-hidden="true"></i> PADRÃO · S-01</span><strong>'+standard.deadline+' rodadas</strong><small>'+standardImpact+'</small></button><button class="choice risky delivery-choice" id="acceptExpress" type="button"><span class="delivery-choice-code"><i class="bi bi-lightning-charge" aria-hidden="true"></i> EXPRESSA · IA-02</span><strong>'+express.deadline+' rodadas</strong><small>'+expressImpact+'</small></button></div>';
+  modal('<span class="eyebrow">ORDEM DE DESPACHO · PECÉM</span><div class="cards-face dispatch-card"><div class="dispatch-heading"><span class="card-label">REGISTRO DE CARGA · 2030</span><span class="dispatch-stamp">RISCO HÍDRICO</span></div><div class="dispatch-meta"><span><small>PROTOCOLO</small><b>PEC-'+protocol+'</b></span><span><small>ROTA</small><b>'+esc(from?from.name:"Território")+' → '+esc(to?to.name:"Território")+'</b></span></div><h3>'+esc(card.name)+'</h3><p>'+esc(card.note)+'</p><p class="dispatch-instruction"><i class="bi bi-signpost-split" aria-hidden="true"></i> Colete na origem e entregue no destino antes do prazo.</p></div>'+action);
   if(!readOnly){$("acceptStandard").onclick=function(){acceptDelivery("standard")};$("acceptExpress").onclick=function(){acceptDelivery("express")}}
 }
 function acceptDelivery(level){
   if(!G||!G.pendingChoice||G.pendingChoice.type!=="delivery"||!isMyTurn()||!SedeRules.canPerform(G,"resolve",current()&&current().id))return;
-  const player=current(),cargo=player.cargo;if(!cargo)return;
-  const preview=SedeRules.deliveryPreview(G,player,level);cargo.serviceLevel=level;cargo.expiresRound=G.round+preview.deadline;G.pendingChoice=null;closeModal();
+  const player=current(),selected=SedeRules.applyDeliverySelection(G,player.id,level);if(!selected.valid)return;G=selected.state;const active=current(),preview=selected.preview;closeModal();
   if(level==="express"){
-    SedeRules.changeAquifer(G,-1,"Entrega expressa de alta demanda");
-    SedeRules.recordFootprint(player,{water:preview.waterFootprint-1,energy:preview.energyFootprint-1});
-    if(preview.windCredit)player.windCredit=false;
-    addLog(player.name+" escolheu Entrega Expressa: prazo de 2 rodadas, maior recompensa e aquífero −1."+(preview.windCredit?" Crédito do Parque Eólico aplicado.":""));
-  }else addLog(player.name+" escolheu Entrega Padrão: prazo de 3 rodadas, sem custo extra no aquífero.");
+    addLog(active.name+" escolheu Entrega Expressa: prazo de 2 rodadas, maior recompensa e aquífero −1."+(preview.windCredit?" Crédito do Parque Eólico aplicado." : ""));
+  }else addLog(active.name+" escolheu Entrega Padrão: prazo de 3 rodadas, sem custo extra no aquífero.");
   render();if(G.aquifer<=0){endGame(true);return}sync()
 }
 function prepareTurn(){
   if(!G||!G.game||!rulesSeen||!isMyTurn()||G.moving||G.rolling||G.pendingLanding||G.pendingChoice)return;
   const p=current();if(p.preparedTurnId===G.turnSerial)return;p.preparedTurnId=G.turnSerial;
-  if(p.skipNext){p.skipNext=false;addLog(p.name+" perdeu a jogada por efeito da Liminar.");render();sync();setTimeout(function(){if(G&&G.game&&isMyTurn())finishTurn(true)},700);return}
-  if(p.cargo&&G.round>=p.cargo.expiresRound)returnCargo(p,"prazo de 3 rodadas esgotado");
+  if(p.skipNext){addLog(p.name+" perdeu a jogada por efeito da Liminar.");render();sync();setTimeout(function(){if(G&&G.game&&isMyTurn())finishTurn(true)},700);return}
+  if(p.cargo&&G.round>=p.cargo.expiresRound){const expired=SedeRules.expireCargo(G,p.id);G=expired.state;addLog(p.name+" perdeu o prazo; a carga voltou ao baralho sem penalidade de pontos.")}
   if(!p.cargo)drawDelivery(p);else{render();sync()}
 }
 async function rollDie(){
- if(!canAct()||G.rolled||!SedeRules.canPerform(G,"roll",current()&&current().id))return;const p=current();G.rolling=true;render();const overlay=$("rollOverlay"),die=$("rollDie");overlay.classList.remove("hidden");die.classList.remove("landed");die.classList.add("rolling");
+ if(!canAct()||G.rolled||!SedeRules.canPerform(G,"roll",current()&&current().id))return;SedeHooks.emit("actionStarted",{type:"roll",player:current()});const p=current();G.rolling=true;render();const overlay=$("rollOverlay"),die=$("rollDie");overlay.classList.remove("hidden");die.classList.remove("landed");die.classList.add("rolling");
  $("rollCaption").textContent="VEZ DE "+p.name.toLocaleUpperCase("pt-BR");$("rollHint").textContent="Seu marcador vai avançar casa por casa";$("rollNumber").textContent="O DADO ESTÁ ROLANDO…";
  const faces=["⚀","⚁","⚂","⚃","⚄","⚅"],frames=SETTINGS.motion==="reduced"?1:SETTINGS.motion==="fast"?7:11;for(let i=0;i<frames;i++){die.textContent=faces[Math.floor(Math.random()*6)];await wait(75)}
- const result=d6();G.lastRoll=result;G.previewTarget=(p.pos+result)%32;G.moveRemaining=result;G.rolling=false;G.rolled=true;die.textContent=faces[result-1];die.classList.remove("rolling");die.classList.add("landed");$("rollNumber").textContent=result+" "+(result===1?"CASA":"CASAS");$("rollHint").textContent="O peão vai percorrer o tabuleiro";$("diceFace").textContent=faces[result-1];$("diceLabel").textContent=p.name+" tirou "+result;render();await sync();await wait(650);overlay.classList.add("hidden");die.classList.remove("landed");die.classList.add("rolling");await movePawn(result,false)
+ const result=G.demoMode&&G.demoRolls&&G.demoRolls.length?G.demoRolls.shift():d6();G.lastRoll=result;G.previewTarget=(p.pos+result)%32;G.moveRemaining=result;G.rolling=false;G.rolled=true;die.textContent=faces[result-1];die.classList.remove("rolling");die.classList.add("landed");$("rollNumber").textContent=result+" "+(result===1?"CASA":"CASAS");$("rollHint").textContent="O peão vai percorrer o tabuleiro";$("diceFace").textContent=faces[result-1];$("diceLabel").textContent=p.name+" tirou "+result;render();await sync();await wait(650);overlay.classList.add("hidden");die.classList.remove("landed");die.classList.add("rolling");await movePawn(result,false)
 }
 async function movePawn(amount,bonus){
-  if(!G||!G.game)return;const p=current(),turn=G.turnSerial;G.moving=true;G.moveRemaining=Math.max(0,Number(amount)||0);G.pendingLanding=null;render();
+  if(!G||!G.game)return;const playerId=current().id,turn=G.turnSerial;G.moving=true;G.moveRemaining=Math.max(0,Number(amount)||0);G.pendingLanding=null;render();
   for(let step=0;step<amount;step++){
-    if(!G.game||G.turnSerial!==turn)return;p.pos=(p.pos+1)%32;
+    if(!G.game||G.turnSerial!==turn)return;const moved=SedeRules.movePlayer(G,playerId,1);if(!moved.valid)return;G=moved.state;let p=current();
     G.moveRemaining=Math.max(0,amount-step-1);
-    if(p.cargo&&!p.cargo.pickedUp&&p.pos===p.cargo.from-1){p.cargo.pickedUp=true;const origin=TERRITORY_SEEDS.find(function(t){return t.house===p.cargo.from});addLog(p.name+" passou por "+(origin?origin.name:"a origem")+" e coletou a carga.");toast("Carga coletada: siga até o destino.")}
-    const synergy=SedeRules.visitHouse(G,p,p.pos+1);if(synergy)addLog(p.name+" · "+synergy);
-    const site=territoryAt(p.pos),contractProgress=site&&SedeRules.visitContractSite(G,p,site.id);if(contractProgress)addLog(contractProgress.message);
+    if(p.cargo&&!p.cargo.pickedUp&&p.pos===p.cargo.from-1){const collected=SedeRules.collectCargo(G,playerId);G=collected.state;p=current();const origin=TERRITORY_SEEDS.find(function(t){return t.house===p.cargo.from});addLog(p.name+" passou por "+(origin?origin.name:"a origem")+" e coletou a carga.");toast("Carga coletada: siga até o destino.")}
+    const synergy=SedeRules.visitHouseState(G,playerId,p.pos+1);G=synergy.state;p=current();if(synergy.message)addLog(p.name+" · "+synergy.message);
+    const site=territoryAt(p.pos),contract=site&&SedeRules.visitContractSiteState(G,playerId,site.id);if(contract){G=contract.state;if(contract.result)addLog(contract.result.message)}
     render();await sync();await wait(135)
   }
-  if(!G||!G.game||G.turnSerial!==turn)return;G.moveRemaining=0;G.moving=false;G.rolled=true;addLog(p.name+" terminou na casa "+(p.pos+1)+" de 32.");render();land(p.pos)
+  if(!G||!G.game||G.turnSerial!==turn)return;const p=current();G.moveRemaining=0;G.moving=false;G.rolled=true;addLog(p.name+" terminou na casa "+(p.pos+1)+" de 32.");render();land(p.pos)
 }
 function showCombatCard(combat,readOnly){
   const faces=["","⚀","⚁","⚂","⚃","⚄","⚅"],finished=combat.phase==="result";
@@ -361,56 +394,53 @@ async function resolveDispute(territory){
   showCombatCard(G.combat,false);await sync();
   const a=d6(),d=d6(),faces=["","⚀","⚁","⚂","⚃","⚄","⚅"];
   for(let i=0;i<8;i++){if($("attackDie"))$("attackDie").textContent=faces[d6()];if($("defendDie"))$("defendDie").textContent=faces[d6()];await wait(80)}
-  G.combat.attackerRoll=a;G.combat.defenderRoll=d;G.combat.phase="result";let result="";
-  if(a>d){territory.owner=G.pi;result="Ataque venceu. "+attacker.name+" assume o território."}
-  else if(d>a){attacker.pos=(attacker.pos+30)%32;returnCargo(attacker,"derrota na Disputa");result="Defesa venceu. O atacante recua 2 casas e devolve a carga."}
-  else{attacker.pos=(attacker.pos+31)%32;result="Empate. O defensor mantém o território; o atacante recua 1 casa e conserva a carga."}
+  G.combat.attackerRoll=a;G.combat.defenderRoll=d;G.combat.phase="result";const resolution=SedeRules.resolveDispute(G,attacker.id,territory.id,a,d);G=resolution.state;const result=resolution.message;
   G.combat.result="Atacante "+a+" · Defensor "+d+". "+result;addLog(result);render();showCombatCard(G.combat,!isMyTurn());await sync();await wait(1000);closeModal();G.combat=null
 }
 function completeDelivery(player,territory){
   const card=player.cargo;if(!card||!card.pickedUp||card.to!==territory.house)return;
-  const honest=!card.maquiada,express=card.serviceLevel==="express",consultationBonus=honest&&player.anaceConsulted?1:0;
-  const points=(honest?3:4)+(express?2:0)+consultationBonus;player.score+=points;SedeRules.recordFootprint(player,{water:1,energy:1});
-  if(consultationBonus)player.anaceConsulted=false;
-  player.deliveries++;G.deliveriesThisRound++;G.usedDeliveries.push(card.id);
-  if(territory.owner==null)territory.owner=G.pi;
-  const detail=(honest?"Entrega transparente":"Entrega maquiada não descoberta")+": +"+points+" pontos"+(express?" (SLA expresso)":"")+(consultationBonus?"; +1 pela consulta Anacé":"")+(honest?" e 1 Power Up.":"; o aquífero já caiu 1 na escolha do atalho.");
-  addLog(player.name+" concluiu “"+card.name+"”. "+detail);G.deliveryDiscard.push(DELIVERY_CARDS.find(function(c){return c.id===card.id})||card);player.cargo=null;render();
+  const honest=!card.maquiada,express=card.serviceLevel==="express",completion=SedeRules.completeDelivery(G,player.id,territory.house);if(!completion.completed)return;G=completion.state;player=current();const points=completion.result.points,consultationBonus=completion.result.consultationBonus;
+  const detail=(honest?"Entrega transparente":"Entrega maquiada não descoberta")+": +"+points+" pontos"+(express?" (SLA expresso)":"")+(consultationBonus?"; +1 pela consulta Anacé":"")+(honest?" e 1 Power Up.":"; o aquífero já caiu 1 na escolha do atalho.");SedeHooks.emit("deliveryResolved",{player:player,cargo:card,honest:honest,points:points});
+  addLog(player.name+" concluiu “"+card.name+"”. "+detail);render();
   if(G.aquifer<=0){endGame(true);return}if(player.deliveries>=3){endGame(false);return}
   if(honest)drawPowerUp("entrega honesta concluída");else{toast("Entrega concluída: +4 pontos; carga maquiada não foi descoberta.");sync()}
 }
-function advanceRound(){
-  if(G.deliveriesThisRound>=2&&G.rebateBlockedRound!==G.round){SedeRules.changeAquifer(G,-1,"Efeito rebote");addLog("Efeito rebote: 2 ou mais entregas na rodada aumentaram o consumo. Aquífero −1.")}
-  if(G.aquifer<=0){endGame(true);return false}if(G.round>=10){endGame(false);return false}
-  G.round++;G.deliveriesThisRound=0;const failure=SedeRules.failContract(G);if(failure){addLog(failure.message);if(G.aquifer<=0){endGame(true);return false}}return true
-}
 function finishTurn(automatic){
- if(!G||!G.game||(!automatic&&(!canAct()||!G.rolled||!SedeRules.canPerform(G,"finish",current()&&current().id))))return;const finished=current().name;G.pendingLanding=null;G.pendingChoice=null;G.previewTarget=null;G.moveRemaining=0;closeModal();G.rolled=false;G.lastRoll=0;G.turnSerial++;
- if(G.pi===G.players.length-1){if(!advanceRound())return;G.pi=0}else G.pi++;
+ if(!G||!G.game||(!automatic&&!canAct()))return;const finishedPlayer=current(),finished=finishedPlayer.name;G.actionActorUid=finishedPlayer.uid||null;G.hostActionPending=!!(G.online&&G.online.isHost&&finishedPlayer.uid===G.online.uid);closeModal();
+ const transition=SedeRules.advanceTurnState(G,finishedPlayer.id,G.roundLimit,!!automatic);if(!transition.valid)return;G=transition.state;
+ if(transition.rebound)addLog("Efeito rebote: 2 ou mais entregas na rodada aumentaram o consumo. Aquífero −1.");
+ if(transition.contract)addLog(transition.contract.message);
+ if(transition.roundAdvanced)SedeHooks.emit("roundAdvanced",{round:G.round});
+ if(transition.roundClosed&&!transition.roundAdvanced){endGame(G.aquifer<=0);return}
+ if(G.aquifer<=0){endGame(true);return}
  G.turnNotice=finished+" encerrou a rota. "+current().name+", o próximo registro é seu.";G.turnNoticeSerial=G.turnSerial;addLog(G.turnNotice);render();toast(G.turnNotice);sync();prepareTurn()
 }
 function endGame(waterLoss){
-  if(!G||!G.game)return;G.game=false;G.win=!waterLoss;G.pendingChoice=null;G.pendingLanding=null;G.moving=false;G.rolling=false;G.moveRemaining=0;if(waterLoss&&G.aquifer>0)SedeRules.changeAquifer(G,-G.aquifer,"Crise do aquífero");
-  const ranking=G.players.map(function(p){const land=G.territories.filter(function(t){return t.owner===G.players.indexOf(p)}).length;return{p:p,total:p.score+land,land:land}}).sort(function(a,b){return b.total-a.total}),winners=waterLoss?[]:ranking.filter(function(x){return x.total===ranking[0].total});
+  if(!G||!G.game)return;G.hostActionPending=!!(G.online&&G.online.isHost&&current()&&current().uid===G.online.uid);G.endedAt=Date.now();G.durationMs=G.endedAt-(G.startedAt||G.endedAt);if(waterLoss&&G.aquifer>0){const collapse=SedeRules.changeAquiferState(G,-G.aquifer,"Crise do aquífero");G=collapse.state}const outcome=SedeRules.gameOutcome(G,G.roundLimit,true);G.game=false;G.win=outcome.won;G.pendingChoice=null;G.pendingLanding=null;G.moving=false;G.rolling=false;G.moveRemaining=0;
+  const ranking=outcome.ranking.map(function(row){return{p:row.player,total:row.total,land:row.land}}),winners=outcome.winners.map(function(row){return{p:row.player,total:row.total,land:row.land}});
   const scoreboard=ranking.map(function(x,i){return'<div class="player-row"><span class="player-chip" style="background:'+esc(x.p.color)+'"></span><div class="player-text"><b>'+(i+1)+". "+esc(x.p.name)+'</b><small>'+x.p.score+' de entrega + '+x.land+' de território</small></div><div class="player-score">'+x.total+' pts</div></div>'}).join("");
-  render();modal('<span class="eyebrow">FIM DA PARTIDA · '+(waterLoss?"CRISE DO AQUÍFERO":"BALANÇO FINAL")+'</span><h2>'+(waterLoss?"O aquífero secou.":"A rota chegou ao fim.")+'</h2><p>'+(waterLoss?"A água chegou a zero. A perda é coletiva: todos os jogadores perdem.":"O aquífero permaneceu acima de zero. Vence "+(winners.length>1?"o empate entre ":"")+winners.map(function(x){return esc(x.p.name)}).join(", ")+" com mais pontos.")+'</p><div class="rule-callout">Água: '+G.aquifer+'/10 · Rodada: '+Math.min(G.round,10)+'/10 · Entregas concluídas: '+G.usedDeliveries.length+'</div>'+scoreboard+'<div class="form-actions"><button class="btn primary" id="restartBtn" type="button">Nova partida</button></div>');
+  render();modal('<span class="eyebrow">FIM DA PARTIDA · '+(waterLoss?"CRISE DO AQUÍFERO":"BALANÇO FINAL")+'</span><h2>'+(waterLoss?"O aquífero secou.":"A rota chegou ao fim.")+'</h2><p>'+(waterLoss?"A água chegou a zero. A perda é coletiva: todos os jogadores perdem.":"O aquífero permaneceu acima de zero. Vence "+(winners.length>1?"o empate entre ":"")+winners.map(function(x){return esc(x.p.name)}).join(", ")+" com mais pontos.")+'</p><div class="rule-callout">Água: '+G.aquifer+'/10 · Rodada: '+Math.min(G.round,G.roundLimit||10)+'/'+(G.roundLimit||10)+' · Entregas concluídas: '+G.usedDeliveries.length+'</div>'+scoreboard+'<div class="form-actions"><button class="btn primary" id="restartBtn" type="button">Nova partida</button></div>');SedeHooks.emit("gameEnded",{state:G,waterLoss:waterLoss,ranking:ranking,winners:winners});
   $("restartBtn").onclick=setup;sync()
 }
 function sync(){
-  if(!G||!G.online||!window.publishOnline)return Promise.resolve();const snapshot=window.snapshotOnline?window.snapshotOnline():G;
-  return Promise.resolve(window.publishOnline(snapshot)).catch(function(err){console.warn("Falha ao sincronizar a partida.",err)})
+  if(!G||!G.online||!window.publishOnline)return Promise.resolve();
+  const actorUid=G.actionActorUid||(current()&&current().uid),hostAction=!!G.hostActionPending;G.actionActorUid=null;G.hostActionPending=false;
+  syncQueue=syncQueue.catch(function(){}).then(function(){if(!G||!G.online||!window.publishOnline)return;const snapshot=window.snapshotOnline?window.snapshotOnline():G,expectedRevision=Number(G.revision)||0;snapshot.revision=expectedRevision+1;return window.publishOnline(snapshot,{expectedRevision:expectedRevision,actorUid:actorUid,hostAction:hostAction}).then(function(result){if(result&&result.committed&&G&&G.online)G.revision=result.revision;else if(result&&!result.committed)toast("A sala mudou em outro dispositivo. Sincronizando a vez atual.")})}).catch(function(err){console.warn("Falha ao sincronizar a partida.",err)});return syncQueue
 }
 function openCurrentChoice(readOnly){
   if(!G||!G.pendingChoice)return;const c=G.pendingChoice;
+  if(SedeHooks.request("renderChoice",{choice:c,readOnly:readOnly}))return;
   if(c.type==="delivery")showDeliveryCard(c.card,readOnly);
   if(c.type==="dilemma")showDilemma(c.card,readOnly);
   if(c.type==="power")showPowerCard(c.card,c.reason,readOnly)
 }
-window.startOnlineState=function(roster,ctx){G=makeGame(roster,ctx);rulesSeen=false;render();showRules(true);return window.snapshotOnline()};
+window.startOnlineState=function(roster,ctx){G=makeGame(roster,ctx);rulesSeen=false;SedeHooks.emit("gameCreated",G);render();showRules(true);return window.snapshotOnline()};
 window.snapshotOnline=function(){if(!G)return null;const copy=Object.assign({},G);delete copy.online;return JSON.parse(JSON.stringify(copy))};
 window.applyOnlineState=function(state,ctx){
-  if(!state)return;const wasMoving=G&&G.moving&&isMyTurn(),candidate=Object.assign({},state,{online:ctx});candidate.pendingLanding=candidate.pendingLanding==null?null:candidate.pendingLanding;candidate.pendingChoice=candidate.pendingChoice||null;candidate.combat=candidate.combat||null;candidate.territories=(candidate.territories||[]).map(function(t){return Object.assign({},t,{owner:t.owner==null?null:t.owner})});candidate.players=(candidate.players||[]).map(function(p){return Object.assign({cargo:null,skipNext:false},p)});candidate.log=candidate.log||[];candidate.usedDeliveries=candidate.usedDeliveries||[];candidate.deliveryDiscard=candidate.deliveryDiscard||[];candidate.dilemmaDiscard=candidate.dilemmaDiscard||[];candidate.powerDiscard=candidate.powerDiscard||[];
-  SedeRules.normalize(candidate);const stateErrors=SedeRules.validate(candidate);if(stateErrors.length){console.error("Estado online recusado:",stateErrors);toast("A sala enviou um estado inválido. Atualize a página para tentar de novo.");return}G=candidate;
+  if(!state||!ctx)return;if(G&&G.online&&G.online.code===ctx.code&&Number(state.revision)<=Number(G.revision))return;
+  const incoming=Object.assign({},state),rawErrors=SedeRules.validateOnlineState(incoming);if(rawErrors.length){console.error("Estado online recusado:",rawErrors);toast("A sala enviou um estado inválido. Atualize a página para tentar de novo.");return}
+  const wasMoving=G&&G.moving&&isMyTurn(),candidate=Object.assign({},incoming,{online:ctx});candidate.pendingLanding=candidate.pendingLanding==null?null:candidate.pendingLanding;candidate.pendingChoice=candidate.pendingChoice||null;candidate.combat=candidate.combat||null;candidate.territories=candidate.territories.map(function(t){return Object.assign({},t,{owner:t.owner==null?null:t.owner})});candidate.players=candidate.players.map(function(p){return Object.assign({cargo:null,skipNext:false},p)});candidate.log=candidate.log||[];candidate.usedDeliveries=candidate.usedDeliveries||[];candidate.deliveryDiscard=candidate.deliveryDiscard||[];candidate.dilemmaDiscard=candidate.dilemmaDiscard||[];candidate.powerDiscard=candidate.powerDiscard||[];
+  SedeRules.normalize(candidate);const stateErrors=SedeRules.validateOnlineState(candidate);if(stateErrors.length){console.error("Estado online recusado:",stateErrors);toast("A sala enviou um estado inválido. Atualize a página para tentar de novo.");return}G=candidate;SedeHooks.emit("onlineStateApplied",{state:G,context:ctx});
   if(!G.game){showEndFromState();render();return}render();if(!rulesSeen){showRules(true);return}
   if(G.pendingLanding!==null&&G.pendingLanding!==undefined){showHouseCard(G.pendingLanding,!isMyTurn());return}
   if(G.pendingChoice){openCurrentChoice(!isMyTurn());return}
@@ -421,9 +451,9 @@ function showEndFromState(){
   if(!G)return;const ranking=G.players.map(function(p){const land=G.territories.filter(function(t){return t.owner===G.players.indexOf(p)}).length;return{p:p,total:p.score+land,land:land}}).sort(function(a,b){return b.total-a.total}),winners=G.win?ranking.filter(function(x){return x.total===ranking[0].total}):[];
   const scoreboard=ranking.map(function(x){return'<div class="player-row"><span class="player-chip" style="background:'+esc(x.p.color)+'"></span><div class="player-text"><b>'+esc(x.p.name)+'</b><small>'+x.p.score+' + '+x.land+' território(s)</small></div><div class="player-score">'+x.total+' pts</div></div>'}).join("");
   modal('<span class="eyebrow">PARTIDA ONLINE CONCLUÍDA</span><h2>'+(G.win?"O aquífero resistiu.":"Derrota coletiva: aquífero seco.")+'</h2><p>'+(G.win?"Entre os jogadores, vence quem somou mais pontos: "+winners.map(function(x){return esc(x.p.name)}).join(", ")+".":"Se a água chega a zero, todos perdem.")+'</p><div class="rule-callout">Água '+G.aquifer+'/10 · Rodada '+G.round+'/10</div>'+scoreboard+'<div class="form-actions"><button class="btn primary" id="leaveFinishedRoom" type="button">Fechar</button></div>');
-  $("leaveFinishedRoom").onclick=function(){if(window.leaveOnline)window.leaveOnline();setup()}
+  $("leaveFinishedRoom").onclick=function(){if(window.leaveOnline)window.leaveOnline();setup()};SedeHooks.emit("gameEnded",{state:G,waterLoss:!G.win,ranking:ranking,winners:winners})
 }
-$("rollBtn").onclick=rollDie;$("endTurnBtn").onclick=function(){finishTurn(false)};$("rulesBtn").onclick=function(){showRules(false)};$("glossaryBtn").onclick=showGlossary;$("componentsBtn").onclick=showComponents;$("settingsTop").onclick=showSettings;$("newGameBtn").onclick=setup;$("onlineTop").onclick=function(){if(window.openOnline)window.openOnline()};
+$("rollBtn").onclick=rollDie;$("endTurnBtn").onclick=function(){finishTurn(false)};$("helpBtn").onclick=function(){showHelp("rules")};$("componentsBtn").onclick=showComponents;$("settingsTop").onclick=showSettings;$("newGameBtn").onclick=setup;$("onlineTop").onclick=function(){if(window.openOnline)window.openOnline()};
 
 </script>
 <script src="./game-view.js"></script>
@@ -433,7 +463,7 @@ $("rollBtn").onclick=rollDie;$("endTurnBtn").onclick=function(){finishTurn(false
 <script type="module">
 const SDK="https://www.gstatic.com/firebasejs/13.4.0/";let app=null,auth=null,db=null,uid=null,activeRoom=null,unsubs=[];
 const q=function(s){return document.querySelector(s)};
-function cleanRoom(s){return String(s||"").toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,8)}
+function cleanRoom(s){return String(s||"").toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,6)}
 function showModal(html){q("#overlay").classList.remove("hidden");q("#modal").className="modal";q("#modal").innerHTML=html}
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
 function configReady(){const c=window.FIREBASE_CONFIG;return!!(c&&c.apiKey&&c.apiKey!=="COLE_A_API_KEY"&&c.databaseURL&&!c.databaseURL.includes("COLE_A_URL")&&!c.databaseURL.includes("SEU-PROJETO")&&c.projectId&&c.projectId!=="SEU-PROJETO"&&c.appId&&c.appId!=="COLE_O_APP_ID")}
@@ -447,15 +477,15 @@ async function connect(){
 function setMessage(text,bad){const el=q("#onlineMsg");if(el){el.className="status-msg "+(bad?"status-error":"");el.textContent=text}}
 function chooser(message){
   const room=new URLSearchParams(location.search).get("room")||"",options=[["#75a36c","Verde"],["#72aeb8","Azul"],["#d88469","Terracota"],["#a295c4","Violeta"]];
-  showModal('<div class="online-head"><span class="eyebrow">PARTIDA MULTIDISPOSITIVO · EM TEMPO REAL</span><h2>Entrar na mesma mesa</h2><p>Cada pessoa usa seu próprio celular ou computador. A sala aceita de 2 a 4 jogadores.</p></div><div class="online-body"><label for="onlineName">Seu nome</label><input id="onlineName" maxlength="18" value="Jogador online"><label for="onlineRole">Cor do marcador</label><select id="onlineRole">'+options.map(function(x){return'<option value="'+x[0]+'">'+x[1]+'</option>'}).join("")+'</select><label for="roomCode">Código da sala para entrar</label><input id="roomCode" maxlength="8" placeholder="Ex.: PECEM7" value="'+escapeHtml(room)+'" style="text-transform:uppercase;letter-spacing:.15em"><div id="onlineMsg" class="status-msg">'+escapeHtml(message||"Crie uma sala ou informe o código recebido.")+'</div><div class="online-actions"><button class="btn" id="closeOnline" type="button">Voltar</button><button class="btn" id="joinRoom" type="button">Entrar com código</button><button class="btn primary" id="createRoom" type="button">Criar sala</button></div></div>');
+  showModal('<div class="online-head"><span class="eyebrow">PARTIDA MULTIDISPOSITIVO · EM TEMPO REAL</span><h2>Entrar na mesma mesa</h2><p>Cada pessoa usa seu próprio celular ou computador. A sala aceita de 2 a 4 pessoas.</p></div><div class="online-body"><label for="onlineRole">Cor do marcador</label><select id="onlineRole">'+options.map(function(x){return'<option value="'+x[0]+'">'+x[1]+'</option>'}).join("")+'</select><label for="roomCode">Código da sala</label><input id="roomCode" maxlength="6" placeholder="Ex.: PECEM7" value="'+escapeHtml(room)+'" style="text-transform:uppercase;letter-spacing:.15em"><div id="onlineMsg" class="status-msg">'+escapeHtml(message||"Crie uma sala ou informe o código recebido.")+'</div><div class="online-actions"><button class="btn" id="closeOnline" type="button">Voltar</button><button class="btn" id="joinRoom" type="button">Entrar com código</button><button class="btn primary" id="createRoom" type="button">Criar sala</button></div></div>');
   q("#closeOnline").onclick=function(){if(!G||!G.game)setup();else q("#overlay").classList.add("hidden")};q("#createRoom").onclick=createRoom;q("#joinRoom").onclick=joinRoom
 }
 window.openOnline=function(){
-  if(!configReady()){showModal('<div class="online-head"><span class="eyebrow">PARTIDA ENTRE DISPOSITIVOS</span><h2>Configure o acesso online</h2><p>O modo local continua funcionando. Para uma sala compartilhada, publique o arquivo de configuração do Firebase preenchido e as regras do Realtime Database.</p></div><div class="rule-callout">Ative o Realtime Database e o login anônimo no Firebase. Depois, publique juntos o jogo, firebase-config.js e as regras do banco.</div><div class="online-actions"><button class="btn primary" id="closeSetupOnline" type="button">Voltar</button></div>');q("#closeSetupOnline").onclick=function(){setup()};return}
+  if(!configReady()){showModal('<div class="online-head"><span class="eyebrow">PARTIDA ENTRE DISPOSITIVOS</span><h2>Online ainda não configurado</h2><p>As salas compartilhadas dependem da configuração e das regras do Firebase. A partida local já está pronta.</p></div><div class="online-actions"><button class="btn" id="closeSetupOnline" type="button">Voltar ao menu</button><button class="btn primary" id="localSetupOnline" type="button">Jogar localmente</button></div>');q("#closeSetupOnline").onclick=setup;q("#localSetupOnline").onclick=showPlayerSetup;return}
   chooser("")
 };
-function playerProfile(){const color=q("#onlineRole").value;return{name:q("#onlineName").value.trim()||"Jogador",role:[color,"Marcador"],color:color}}
-function friendlyError(e){if(e.message==="CONFIG")return"Preencha firebase-config.js antes de criar uma sala.";if(e.code==="auth/operation-not-allowed")return"Ative o login anônimo nas opções de autenticação do Firebase.";if(e.code==="PERMISSION_DENIED"||String(e.message).toLowerCase().includes("permission"))return"Acesso negado. Confira as regras do Realtime Database.";return"Não foi possível conectar. Confira internet, configuração e tente novamente."}
+function playerProfile(){const color=q("#onlineRole").value,label=(q("#onlineRole").selectedOptions[0]||{}).textContent||"Marcador";return{name:"Marcador "+label,color:color}}
+function friendlyError(e){if(e.message==="CONFIG")return"Preencha firebase-config.js antes de criar uma sala.";if(e.message==="ROOM_ALREADY_STARTED")return"A partida já foi iniciada nesta sala.";if(e.code==="auth/operation-not-allowed")return"Ative o login anônimo nas opções de autenticação do Firebase.";if(e.code==="PERMISSION_DENIED"||String(e.message).toLowerCase().includes("permission"))return"A sala pode estar cheia ou as regras do Firebase precisam ser atualizadas.";if(e.code==="NETWORK_ERROR"||!navigator.onLine)return"Sem conexão com a internet. Você pode voltar ao modo local.";if(e.message==="ROOM_MISSING")return"Essa sala não existe ou foi encerrada. Confira o código.";return"Não foi possível conectar. Confira internet, configuração e tente novamente."}
 async function createRoom(){
   try{
     if(activeRoom)leaveOnline();const api=await connect(),alphabet="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";let code,exists=true;
@@ -468,20 +498,25 @@ async function createRoom(){
 async function joinRoom(){
   try{
     if(activeRoom)leaveOnline();const api=await connect(),code=cleanRoom(q("#roomCode").value);
-    if(code.length<4){setMessage("Digite o código compartilhado por quem criou a sala.",true);return}
+    if(code.length!==6){setMessage("Digite o código de 6 letras ou números recebido.",true);return}
     const snap=await api.get(api.ref(db,"rooms/"+code+"/meta"));if(!snap.exists()){setMessage("Não encontrei essa sala. Confira o código.",true);return}
     const meta=snap.val(),memberRef=api.ref(db,"rooms/"+code+"/members/"+uid),existing=await api.get(memberRef);
-    if(meta.status==="started"&&!existing.exists()){setMessage("A partida já começou. Peça ao anfitrião para criar outra sala.",true);return}
-    const profile=playerProfile();await api.set(memberRef,Object.assign({},profile,{joinedAt:existing.exists()?existing.val().joinedAt:Date.now()}));
+    if(meta.status!=="waiting"&&!existing.exists()){setMessage("A partida já começou. Peça ao anfitrião para criar outra sala.",true);return}
+    const profile=playerProfile();if(!existing.exists()){const joined=await api.runTransaction(memberRef,function(current){return current||Object.assign({},profile,{joinedAt:Date.now()})});if(!joined.committed){const latest=await api.get(api.ref(db,"rooms/"+code+"/members"));if(Object.keys(latest.val()||{}).length>=4){setMessage("A sala chegou ao limite de 4 jogadores.",true);return}}}
     const rosterSnap=await api.get(api.ref(db,"rooms/"+code+"/members")),roster=rosterSnap.val()||{};
-    if(Object.keys(roster).length>4){await api.set(memberRef,null);setMessage("A sala chegou ao limite de 4 jogadores.",true);return}
+    if(Object.keys(roster).length>4){setMessage("A sala chegou ao limite de 4 jogadores.",true);return}
     activeRoom={code:code,uid:uid,host:meta.host,isHost:false,meta:meta,api:api};window.leaveOnline=leaveOnline;watchRoom(activeRoom);showLobby(activeRoom)
   }catch(e){setMessage(friendlyError(e),true)}
 }
+function setConnectionNotice(text,show){
+  const banner=q("#connectionNotice");if(!banner)return;banner.hidden=!show;if(text)q("#connectionMessage").textContent=text;
+}
+q("#continueLocally").onclick=function(){leaveOnline();if(G){G.online=null;G.lastActionUid=null;render();setConnectionNotice("",false);toast("Partida segue neste aparelho.")}else setup()};
 function watchRoom(ctx){
   const membersRef=ctx.api.ref(db,"rooms/"+ctx.code+"/members"),stateRef=ctx.api.ref(db,"rooms/"+ctx.code+"/state");
-  unsubs.push(ctx.api.onValue(membersRef,function(s){ctx.members=Object.entries(s.val()||{}).map(function(x){return Object.assign({uid:x[0]},x[1])}).sort(function(a,b){return a.uid===ctx.host?-1:b.uid===ctx.host?1:a.joinedAt-b.joinedAt});updateLobby(ctx)}));
-  unsubs.push(ctx.api.onValue(stateRef,function(s){if(s.exists()){const state=s.val();if(state.started)window.applyOnlineState(state,ctx)}}))
+  unsubs.push(ctx.api.onValue(ctx.api.ref(db,".info/connected"),function(s){ctx.connected=!!s.val();if(!ctx.connected)setConnectionNotice("Conexão perdida. A partida online está pausada.",true);else setConnectionNotice("",false)},function(){setConnectionNotice("Não foi possível acompanhar a conexão com a sala.",true)}));
+  unsubs.push(ctx.api.onValue(membersRef,function(s){ctx.members=Object.entries(s.val()||{}).map(function(x){return Object.assign({uid:x[0]},x[1])}).sort(function(a,b){return a.uid===ctx.host?-1:b.uid===ctx.host?1:a.joinedAt-b.joinedAt});updateLobby(ctx)},function(){setConnectionNotice("A sala não existe mais ou você perdeu acesso.",true)}));
+  unsubs.push(ctx.api.onValue(stateRef,function(s){if(s.exists()){const state=s.val();if(state.started)window.applyOnlineState(state,ctx)}else if(ctx.meta.status==="started")setConnectionNotice("A sala não enviou um estado de partida válido.",true)},function(){setConnectionNotice("Não foi possível ler o estado da sala. Confira as regras do Firebase.",true)}))
 }
 function showLobby(ctx){
   showModal('<div class="online-head"><span class="eyebrow">SALA ONLINE · '+(ctx.isHost?"ANFITRIÃO":"JOGADOR")+'</span><h2>Compartilhe o código</h2><p>Abra o mesmo endereço em cada dispositivo e entre com este código.</p></div><div class="online-body"><div class="room-code" id="roomcode">'+ctx.code+'</div><div class="online-actions" style="justify-content:center"><button class="btn" id="copyInvite" type="button">Copiar código e link</button></div><h3>Jogadores na sala</h3><div class="member-list" id="memberList"><div class="member-item">Conectando…</div></div><div id="lobbyMsg" class="status-msg">Aguardando mais jogadores.</div><div class="online-actions"><button class="btn" id="leaveRoom" type="button">Sair da sala</button>'+(ctx.isHost?'<button class="btn primary" id="startOnline" type="button">Iniciar partida</button>':'')+'</div></div>');
@@ -490,24 +525,40 @@ function showLobby(ctx){
 }
 function updateLobby(ctx){
   if(!activeRoom||activeRoom.code!==ctx.code)return;const list=q("#memberList");if(!list)return;const members=ctx.members||[];
-  list.innerHTML=members.map(function(m,i){return'<div class="member-item">'+(i===0?"👑":"🟢")+" "+escapeHtml(m.name)+" · marcador "+escapeHtml((m.role&&m.role[0])||"")+"</div>"}).join("")||'<div class="member-item">Aguardando jogadores…</div>';
+  list.innerHTML=members.map(function(m,i){return'<div class="member-item">'+(i===0?"👑":"🟢")+" "+escapeHtml(m.name)+" · "+escapeHtml(m.color||"marcador")+"</div>"}).join("")||'<div class="member-item">Aguardando jogadores…</div>';
   const msg=q("#lobbyMsg");if(msg)msg.textContent=ctx.isHost?(members.length>=2?"Sala pronta: o anfitrião pode iniciar.":"Falta "+(2-members.length)+" jogador para iniciar."):("Você entrou. Aguardando o anfitrião iniciar ("+members.length+"/4).");
   const start=q("#startOnline");if(start)start.disabled=members.length<2||members.length>4
 }
 async function startRoom(ctx){
   try{
     const members=ctx.members||[];if(members.length<2||members.length>4){q("#lobbyMsg").textContent="A sala precisa ter de 2 a 4 jogadores.";return}
-    const roster=members.slice(0,4).map(function(m){return{uid:m.uid,name:m.name,color:m.color||m.role&&m.role[0]}});
+    if(!ctx.isHost){q("#lobbyMsg").textContent="Somente o anfitrião pode iniciar a partida.";return}
+    const metaRef=ctx.api.ref(db,"rooms/"+ctx.code+"/meta"),claim=await ctx.api.runTransaction(metaRef,function(current){if(!current||current.host!==ctx.uid||current.status!=="waiting")return;return Object.assign({},current,{status:"starting"})});
+    if(!claim.committed){q("#lobbyMsg").textContent="Esta sala já está sendo iniciada ou foi encerrada.";return}
+    ctx.meta=claim.snapshot.val();
+    const roster=members.slice(0,4).map(function(m){return{uid:m.uid,name:m.name,color:m.color}});
     const state=window.startOnlineState(roster,ctx);state.started=true;state.host=ctx.host;
-    ctx.meta=Object.assign({},ctx.meta,{status:"started"});await ctx.api.set(ctx.api.ref(db,"rooms/"+ctx.code+"/meta"),ctx.meta);await ctx.api.set(ctx.api.ref(db,"rooms/"+ctx.code+"/state"),state)
+    const stateRef=ctx.api.ref(db,"rooms/"+ctx.code+"/state"),created=await ctx.api.runTransaction(stateRef,function(current){if(current)return;return state});if(!created.committed)throw new Error("ROOM_ALREADY_STARTED");
+    ctx.meta=Object.assign({},ctx.meta,{status:"started"});await ctx.api.set(metaRef,ctx.meta)
   }catch(e){showLobby(ctx);const msg=q("#lobbyMsg");if(msg){msg.className="status-msg status-error";msg.textContent=friendlyError(e)}}
 }
-window.publishOnline=async function(state){
-  const ctx=activeRoom;if(!ctx)return;const stateRef=ctx.api.ref(db,"rooms/"+ctx.code+"/state");
-  try{const result=await ctx.api.runTransaction(stateRef,function(current){if(!current||!current.players||current.players[current.pi].uid!==ctx.uid)return;return Object.assign({},state,{started:true,host:ctx.host})});if(!result.committed)console.info("Ação aguardando a vez deste jogador.")}
-  catch(e){console.error("Não foi possível sincronizar a jogada.",e)}
+window.publishOnline=async function(state,request){
+  const ctx=activeRoom;if(!ctx)return{committed:false};const stateRef=ctx.api.ref(db,"rooms/"+ctx.code+"/state");
+  const expected=Number(request&&request.expectedRevision)||0,actorUid=request&&request.actorUid;
+  try{
+    const candidate=Object.assign({},state,{started:true,host:ctx.host});
+    if(window.SedeRules){const errors=window.SedeRules.validateOnlineState(candidate);if(errors.length)throw new Error("Estado inválido recusado antes do envio: "+errors.join(" "));window.SedeRules.normalize(candidate)}
+    const result=await ctx.api.runTransaction(stateRef,function(current){
+      if(!current||!Array.isArray(current.players)||!current.players[current.pi])return;const activePlayer=current.players[current.pi],isTurnActor=activePlayer.uid===ctx.uid&&actorUid===ctx.uid,isHostClosure=ctx.isHost&&request&&request.hostAction&&((Number(candidate.round)===Number(current.round)+1&&Number(candidate.pi)===0)||(current.game===true&&candidate.game===false));if(!isTurnActor&&!isHostClosure)return;
+      if((Number(current.revision)||0)!==expected)return;
+      if(Number(state.revision)!==expected+1)return;
+      return candidate;
+    });
+    if(!result.committed){console.info("A gravação foi recusada por vez ou revisão desatualizada.");const latest=await ctx.api.get(stateRef);if(latest.exists())window.applyOnlineState(latest.val(),ctx);return{committed:false}}
+    return{committed:true,revision:Number(result.snapshot.val().revision)||expected+1};
+  }catch(e){console.error("Não foi possível sincronizar a jogada.",e);if(!navigator.onLine)setConnectionNotice("Conexão perdida. A partida online está pausada.",true);throw e}
 };
-function leaveOnline(){unsubs.forEach(function(stop){stop()});unsubs=[];activeRoom=null;window.publishOnline=null}
+function leaveOnline(){unsubs.forEach(function(stop){stop()});unsubs=[];activeRoom=null;setConnectionNotice("",false);window.publishOnline=null}
 window.leaveOnline=leaveOnline;
 const roomParam=new URLSearchParams(location.search).get("room");if(roomParam)setTimeout(function(){window.openOnline()},500);
 </script>

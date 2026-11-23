@@ -3,7 +3,7 @@
 
 function trackHTML() {
   const water = G ? G.aquifer : 10;
-  return '<div class="track-head"><span>💧 Aquífero compartilhado</span><strong>' + water + ' / 10</strong></div>' +
+  return '<div class="track-head"><span><i class="bi bi-droplet-half" aria-hidden="true"></i> Aquífero compartilhado</span><strong>' + water + ' / 10</strong></div>' +
     '<div class="track" role="meter" aria-label="Nível do aquífero" aria-valuemin="0" aria-valuemax="10" aria-valuenow="' + water + '"><i style="width:' + water * 10 + '%"></i></div>' +
     '<div class="track-caption"><span>0 · crise coletiva</span><span>10 · recurso preservado</span></div>';
 }
@@ -31,7 +31,7 @@ function drawBoard() {
     if (G) G.players.forEach(function (player, index) {
       if (player.pos !== i) return;
       const token = document.createElement("span"); token.className = "token"; token.style.background = player.color;
-      token.textContent = String(index + 1); token.title = player.name; tokens.appendChild(token);
+      token.setAttribute("aria-label", "Marcador " + player.colorName); token.title = "Marcador " + player.colorName; tokens.appendChild(token);
       if (index === G.pi) cell.classList.add("active");
     });
     cell.appendChild(tokens); board.appendChild(cell);
@@ -40,6 +40,7 @@ function drawBoard() {
   center.setAttribute("aria-label", "Mapa do Pecém e estado do aquífero");
   center.innerHTML = '<span>PECÉM · CEARÁ</span><strong class="center-water">AQUÍFERO · ' + (G ? G.aquifer : 10) + ' / 10</strong>';
   board.appendChild(center);
+  if (window.SedeHooks) window.SedeHooks.emit("boardRendered", { board: board, state: G });
 }
 
 function renderPlayers() {
@@ -50,18 +51,18 @@ function renderPlayers() {
     return;
   }
   const active = current(), myTurn = isMyTurn();
-  announcement.innerHTML = '<div class="turn-banner"><span class="turn-icon">🎲</span><div><small>AGORA É A VEZ DE</small><strong>' + esc(active.name) + '</strong><em>' +
-    (myTurn ? "Confira a carga e lance o dado." : "A rota está com outra pessoa nesta mesa.") + '</em></div></div>' +
+  announcement.innerHTML = '<div class="turn-banner"><span class="turn-icon"><i class="bi bi-dice-5" aria-hidden="true"></i></span><div><small>AGORA É A VEZ DE</small><strong>' + esc(active.name) + '</strong><em>' +
+    (myTurn ? "Confira a carga e lance o dado." : "A rota está com outro marcador.") + '</em></div></div>' +
     (G.turnNotice && G.turnNoticeSerial === G.turnSerial ? '<p class="turn-notice">' + esc(G.turnNotice) + '</p>' : "");
   box.innerHTML = G.players.map(function (player, index) {
     const controlled = G.territories.filter(function (item) { return item.owner === index; }).length;
-    const cargo = player.cargo ? (player.cargo.pickedUp ? "carga coletada" : "buscando origem") : "sem carga";
+    const cargo = player.cargo ? (player.cargo.pickedUp ? "coletada" : "busca origem") + " · " + (player.cargo.serviceLevel === "express" ? "expressa" : player.cargo.serviceLevel === "standard" ? "padrão" : "SLA pendente") + (player.cargo.serviceLevel ? " " + Math.max(0, player.cargo.expiresRound - G.round) + "r" : "") + " · " + (player.cargo.maquiada ? "maquiada" : "transparente") : "sem carga";
+    const support = [player.anaceConsulted ? "+1 Anacé" : "", player.windCredit ? "crédito eólico" : ""].filter(Boolean).join(" · ");
     const band = SedeRules.footprintBand(player), activePlayer = index === G.pi;
     const badge = activePlayer ? (myTurn ? "SUA VEZ" : "VEZ ATUAL") : "NA FILA";
-    return '<div class="player-row ' + (activePlayer ? "current turn-highlight" : "") + '"><span class="player-chip" style="background:' + esc(player.color) + '" aria-hidden="true">' +
-      esc(player.name.charAt(0).toLocaleUpperCase("pt-BR")) + '</span><div class="player-text"><div class="player-name-row"><b>' + esc(player.name) + '</b><span class="turn-badge ' +
-      (activePlayer ? "active" : "") + '">' + badge + '</span></div><small>' + controlled + ' território(s) · ' + cargo + '</small><small class="footprint-line">Pegada <b class="footprint-badge ' + band.className + '">' +
-      band.label + '</b> · água ' + player.footprint.water + ' · energia ' + player.footprint.energy + ' · ' + player.interventionTokens + ' intervenção(ões)</small></div><div class="player-score">' +
+    return '<div class="player-row ' + (activePlayer ? "current turn-highlight" : "") + '"><span class="player-chip" style="background:' + esc(player.color) + '" aria-label="Marcador '+esc(player.colorName)+'"></span><div class="player-text"><div class="player-name-row"><b>' + esc(player.name) + '</b><span class="turn-badge ' +
+      (activePlayer ? "active" : "") + '">' + badge + '</span></div><small>' + controlled + ' territórios · ' + cargo + '</small><small class="footprint-line"><b class="footprint-badge ' + band.className + '">' +
+      band.label + '</b> · água ' + player.footprint.water + ' · energia ' + player.footprint.energy + ' · Tribunal ' + player.interventionTokens + (support ? ' · ' + esc(support) : '') + '</small></div><div class="player-score">' +
       player.score + ' pts<small>' + player.deliveries + '/3 entregas</small></div></div>';
   }).join("");
 }
@@ -82,6 +83,9 @@ function renderCargo() {
   box.innerHTML = '<article class="cargo-card"><span class="card-label">📦 CARTA DE ENTREGA · ' + level + '</span><h3>' + esc(cargo.name) + '</h3><p>' + esc(cargo.note) +
     '</p><div class="cargo-route"><span>Origem: ' + esc(from ? from.short : "Território") + '</span><span>Destino: ' + esc(to ? to.short : "Território") +
     '</span></div><div class="cargo-state">' + (cargo.pickedUp ? "CARGA COLETADA · " : "PASSE PELA ORIGEM · ") + "PRAZO: " + rounds + " RODADA(S)</div></article>";
+  const stateLine=document.createElement("div");stateLine.className="cargo-status-strip";
+  stateLine.innerHTML='<b class="cargo-transparency '+(cargo.maquiada?'risk':'clear')+'">'+(cargo.maquiada?'MAQUIADA':'TRANSPARENTE')+'</b>'+(player.anaceConsulted?'<span>ANACÉ · +1 NA PRÓXIMA ENTREGA</span>':'')+(player.windCredit?'<span>CRÉDITO EÓLICO DISPONÍVEL</span>':'');
+  box.querySelector(".cargo-card").appendChild(stateLine);
 }
 
 function renderTerritories() {
@@ -113,10 +117,11 @@ function renderContract() {
     const done = contract.visitedSites.includes(site);
     return '<li class="contract-site ' + (done ? "done" : "") + '"><span>' + (done ? "✓" : "○") + '</span>' + labels[site] + '</li>';
   }).join("");
+  const roundsLeft=Math.max(0,contract.deadlineRound-G.round+1),participants=(contract.participants||[]).length;
   let status = contract.complete ? "Concluído · +2 pontos por participante e aquífero +2" : contract.failed ? "Prazo encerrado · custo coletivo aplicado" :
-    contract.visitedSites.length===contract.sites.length&&contract.participants.length<2 ? "Locais conectados · falta uma segunda pessoa participar" : "Prazo até o início da rodada " + (contract.deadlineRound + 1);
+    contract.visitedSites.length===contract.sites.length&&participants<2 ? "Locais conectados · falta uma segunda pessoa participar" : "Rodada 6 · faltam "+roundsLeft+" rodada(s)";
   box.innerHTML = '<div class="contract-card ' + (contract.complete ? "complete" : contract.failed ? "failed" : "") + '"><b>Contrato compartilhado</b><h3>' + esc(contract.name) +
-    '</h3><p>Dois ou mais jogadores podem conectar os três pontos. O progresso e a recompensa pertencem à equipe.</p><ul>' + sites + '</ul><small>' + status + '</small></div>';
+    '</h3><ul>' + sites + '</ul><div class="contract-progress"><b>'+participants+'</b> participante(s) · <b>'+contract.visitedSites.length+'/3</b> locais · <span>'+esc(status)+'</span></div></div>';
 }
 
 function renderLastMove() {
@@ -148,8 +153,10 @@ function renderImpactPreview() {
 function render() {
   $("trackWrap").innerHTML = trackHTML();
   drawBoard(); renderPlayers(); renderCargo(); renderTerritories(); renderContract(); renderLastMove(); renderImpactPreview(); renderLog();
-  if (!G) return;
-  $("round").textContent = "RODADA " + Math.min(G.round, 10) + " / 10";
+  const demoPanel=$("demoToolsPanel");if(demoPanel)demoPanel.hidden=!(G&&G.demoMode);
+  if (!G) { if(window.SedeHooks)window.SedeHooks.emit("afterRender",{state:G}); return; }
+  const roundLimit=G.roundLimit||10;
+  $("round").textContent = "RODADA " + Math.min(G.round, roundLimit) + " / " + roundLimit;
   $("dilemmaCount").textContent = (G.dilemmaDeck || []).length + " no baralho · 10 no total";
   $("powerCount").textContent = (G.powerDeck || []).length + " no baralho · 18 no total";
   $("deliveryCount").textContent = (G.deliveryDeck || []).length + " no baralho · 8 no total";
@@ -157,7 +164,8 @@ function render() {
   $("diceFace").textContent = G.lastRoll ? "⚀⚁⚂⚃⚄⚅"[G.lastRoll - 1] : "🎲";
   $("diceLabel").textContent = G.lastRoll ? (G.players[G.pi].name + " tirou " + G.lastRoll) : "Dado de 6 faces";
   $("turnMsg").textContent = !G.game ? "Partida encerrada." : !isMyTurn() ? "A decisão agora é de " + current().name + "." :
-    G.pendingChoice ? "A carta está aberta; conversem antes de escolher." : G.pendingLanding != null ? "Confira o registro desta casa antes de seguir." : G.rolled ? "A rota está traçada. Encerre o turno depois da conversa." : "Sua vez no Pecém. Lance o dado e confira o impacto.";
+    G.pendingChoice ? "A carta está aberta; conversem antes de escolher." : G.pendingLanding != null ? "Confira o registro desta casa antes de seguir." : G.rolled ? "Rota traçada. Encerre o turno depois da conversa." : "Sua vez no Pecém. Lance o dado e confira o impacto.";
   $("rollBtn").disabled = !canAct() || G.rolled;
   $("endTurnBtn").disabled = !canAct() || !G.rolled;
+  if(window.SedeHooks)window.SedeHooks.emit("afterRender",{state:G});
 }

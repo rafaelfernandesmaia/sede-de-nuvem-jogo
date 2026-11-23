@@ -1,0 +1,37 @@
+{
+  "rules": {
+    "rooms": {
+      "$roomId": {
+        ".read": "auth != null && $roomId.matches(/^[A-Z0-9]{6}$/)",
+        "meta": {
+          ".write": "auth != null && $roomId.matches(/^[A-Z0-9]{6}$/) && ((!data.exists() && newData.child('host').val() === auth.uid) || data.child('host').val() === auth.uid)",
+          ".validate": "newData.hasChildren(['host', 'status', 'createdAt', 'maxPlayers']) && newData.child('host').isString() && (newData.child('status').val() === 'waiting' || newData.child('status').val() === 'starting' || newData.child('status').val() === 'started') && newData.child('createdAt').isNumber() && newData.child('maxPlayers').val() === 4"
+        },
+        "members": {
+          ".validate": "newData.numChildren() <= 4",
+          "$uid": {
+            ".write": "auth != null && $roomId.matches(/^[A-Z0-9]{6}$/) && (($uid === auth.uid && (data.exists() || root.child('rooms').child($roomId).child('members').numChildren() < 4)) || auth.uid === root.child('rooms').child($roomId).child('meta').child('host').val())",
+            ".validate": "newData.hasChildren(['name', 'color', 'joinedAt']) && newData.child('name').isString() && newData.child('name').val().length <= 18 && (newData.child('color').val() === '#75a36c' || newData.child('color').val() === '#72aeb8' || newData.child('color').val() === '#d88469' || newData.child('color').val() === '#a295c4') && newData.child('joinedAt').isNumber()"
+          }
+        },
+        "state": {
+          ".write": "auth != null && $roomId.matches(/^[A-Z0-9]{6}$/) && ((!data.exists() && auth.uid === root.child('rooms').child($roomId).child('meta').child('host').val()) || (data.exists() && newData.child('revision').val() === data.child('revision').val() + 1 && (auth.uid === data.child('players').child(data.child('pi').val() + '').child('uid').val() || (auth.uid === root.child('rooms').child($roomId).child('meta').child('host').val() && ((newData.child('round').val() === data.child('round').val() + 1 && newData.child('pi').val() === 0) || newData.child('game').val() === false)))))",
+          ".validate": "newData.hasChildren(['version', 'revision', 'pi', 'round', 'aquifer', 'players', 'territories', 'started']) && newData.child('started').val() === true && newData.child('version').isNumber() && newData.child('revision').isNumber() && newData.child('revision').val() >= 0 && newData.child('pi').isNumber() && newData.child('pi').val() >= 0 && newData.child('round').isNumber() && newData.child('round').val() >= 1 && newData.child('round').val() <= 10 && newData.child('aquifer').isNumber() && newData.child('aquifer').val() >= 0 && newData.child('aquifer').val() <= 10 && newData.child('players').numChildren() >= 2 && newData.child('players').numChildren() <= 4 && newData.child('territories').numChildren() === 8 && newData.child('pi').val() < newData.child('players').numChildren() && newData.child('deliveryDeck').numChildren() <= 8 && newData.child('dilemmaDeck').numChildren() <= 10 && newData.child('powerDeck').numChildren() <= 18 && newData.child('log').numChildren() <= 36 && newData.child('aquiferHistory').numChildren() <= 40",
+          "players": {
+            "$index": {
+              ".validate": "newData.hasChildren(['id', 'uid', 'name', 'color', 'pos', 'score', 'deliveries']) && newData.child('id').isString() && newData.child('uid').isString() && newData.child('name').isString() && newData.child('name').val().length <= 18 && newData.child('color').isString() && newData.child('pos').isNumber() && newData.child('pos').val() >= 0 && newData.child('pos').val() <= 31 && newData.child('score').isNumber() && newData.child('deliveries').isNumber() && newData.child('deliveries').val() >= 0 && newData.child('deliveries').val() <= 3",
+              "footprint": {
+                ".validate": "newData.hasChildren(['water', 'energy']) && newData.child('water').isNumber() && newData.child('water').val() >= 0 && newData.child('energy').isNumber() && newData.child('energy').val() >= 0"
+              }
+            }
+          },
+          "territories": {
+            "$index": {
+              ".validate": "newData.hasChildren(['id', 'house']) && newData.child('id').isString() && newData.child('house').isNumber() && newData.child('house').val() >= 4 && newData.child('house').val() <= 32 && newData.child('house').val() % 4 === 0 && (!newData.child('owner').exists() || (newData.child('owner').isNumber() && newData.child('owner').val() >= 0 && newData.child('owner').val() < newData.parent().parent().child('players').numChildren()))"
+            }
+          }
+        }
+      }
+    }
+  }
+}

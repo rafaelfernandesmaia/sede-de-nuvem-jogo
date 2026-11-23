@@ -12,7 +12,7 @@ O cenário é uma simulação didática, baseada no tema e na pesquisa bibliogr�
 
 ## Componentes e jogadores
 
-- De 2 a 4 jogadores, com peões identificados apenas por cores.
+- De 2 a 4 jogadores, com peões identificados apenas por cores, sem personagens ou habilidades próprias.
 - Tabuleiro em anel com 32 casas.
 - 8 territórios nas casas 4, 8, 12, 16, 20, 24, 28 e 32.
 - 8 cartas de Entrega, com origem, destino e prazo padrão de 3 rodadas; a partida também oferece SLA expresso de 2 rodadas.
@@ -85,7 +85,7 @@ Quando 2 ou mais entregas são concluídas na mesma rodada, o aquífero cai 1 pe
 
 O modo local pode ser jogado em um único dispositivo. Para uma partida online, todos abrem o mesmo endereço; uma pessoa cria a sala e compartilha o código. Os demais entram com esse código. O anfitrião inicia quando houver pelo menos 2 pessoas, e as jogadas e o estado do tabuleiro são sincronizados pelo Firebase Realtime Database.
 
-O modo online requer que **firebase-config.js** esteja preenchido, o login anônimo esteja ativo e as regras do Realtime Database permitam as salas. Mantenha **melhorias.js** e **melhorias-ambiente.css** na raiz, junto de **index.html**, para carregar as interações e o visual atualizados. Se o jogo pedir configuração, consulte o arquivo **online-setup.md** do projeto.
+O modo online requer que **firebase-config.js** esteja preenchido, o login anônimo esteja ativo e as regras do Realtime Database permitam as salas. O anfitrião reserva o início da partida com uma transação; cada atualização de jogo é gravada com revisão crescente e conferência do marcador da vez. O arquivo **database.rules.json** limita códigos de sala, jogadores, campos principais e mudanças de turno. Publique-o no Firebase com `firebase deploy --only database` após selecionar o projeto correto. Essa publicação é separada do GitHub Pages.
 
 ## Recursos do jogo digital
 
@@ -95,14 +95,24 @@ O modo online requer que **firebase-config.js** esteja preenchido, o login anôn
 - Cartas com visual de peças físicas, selos de impacto, animação de revelação, dado e peões animados. O botão de som permite ativar ou silenciar efeitos leves.
 - Prévia do efeito da casa e da escolha de entrega, jogador da vez destacado, síntese da última jogada e opções de configuração/reinício.
 - O glossário explica os termos centrais durante a partida. O relatório final reúne o resultado, as pegadas por jogador, o contrato e a evolução do aquífero.
-- A interface separa modelo e regras (`game-rules.js`) da renderização (`game-view.js`); o arquivo principal coordena as ações e os diálogos. `melhorias.js` mantém persistência local, eventos, negociação e relatório.
+- A interface separa modelo e regras (`game-rules.js`) da renderização (`game-view.js`); `game-hooks.js` oferece eventos nomeados para persistência, apresentação, eventos globais, negociação e relatório. O arquivo principal coordena telas e valida o fluxo de turno.
+- A demo rápida dura 3 rodadas, sorteia territórios pela tabela do roteiro e prepara uma Disputa; os atalhos de apresentação também abrem um Dilema e uma Auditoria. Modo apresentação e alto contraste ampliam a leitura em sala.
+- O relatório registra variação do aquífero, tempo, pegadas por marcador, escolhas transparentes e atalhos, auditorias e efeito rebote. É um registro da partida, não uma medição ambiental.
 
 ## Validação e limites
 
-- Execute `node --test tests/game-rules.test.js` para validar o modelo de regras. Não há empacotador ou etapa de build: o projeto continua sendo servido como arquivos estáticos.
-- O modo online depende de configuração válida do Firebase, regras do Realtime Database e rede. Essa integração não é exercitada pelos testes locais; os novos campos são serializados no estado da sala.
+- Execute `node --test tests/game-rules.test.js` para validar distribuição de territórios, transições puras, Disputas, auditorias, rebote, pontuação, encerramento e validação do estado online. O GitHub Actions executa a mesma suíte em cada push e pull request.
+- Não há empacotador ou etapa de build: o projeto continua sendo servido como arquivos estáticos. DM Sans, IBM Plex Mono e Bootstrap Icons são carregados por CDN; sem rede, a interface usa fontes de reserva e os ícones podem não aparecer.
+- A integração Firebase depende de configuração, regras publicadas e rede. Os testes locais cobrem as regras e a validação de formato, mas não simulam transações concorrentes no Realtime Database.
 - As classificações de pegada e os valores do aquífero são abstrações para discussão em grupo, não dados ambientais observados.
 
 ## TAGS do seminário
 
 Pegada hídrica · Semiárido · Justiça socioambiental · Consulta prévia (Anacé) · Transparência / Greenwashing · Efeito rebote (Jevons) · Nexo água-energia · Green AI · Licença social · Princípio da responsabilidade.
+
+## Referências da carta “Dado contestado”
+
+- Li et al. (2023), *Making AI Less “Thirsty”*: estimativa de cerca de 500 mL para 10–50 respostas médias do GPT-3, variável por local e momento. A conta inclui água de resfriamento do data center e água indireta associada à geração de eletricidade. [Versão 5 no arXiv](https://arxiv.org/html/2304.03271v5).
+- Elsworth et al. (2025), medição de inferência em produção do Gemini Apps: 0,26 mL para um prompt de texto mediano em maio de 2025. A medida publicada considera água de resfriamento do data center; não inclui água indireta da geração de eletricidade. [Artigo no arXiv](https://arxiv.org/abs/2508.15734).
+
+Os números têm escopos, modelos, locais e condições diferentes e não devem ser comparados como se medissem a mesma atividade. A carta os usa para discutir método, transparência e limites de estimativa.

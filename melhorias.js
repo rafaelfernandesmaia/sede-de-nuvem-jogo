@@ -22,19 +22,14 @@
   }
 
   /* Casas clicáveis: permite consultar o efeito antes de cair nelas. */
-  const style=document.createElement("style");
-  style.textContent=".cell{cursor:pointer}.cell:focus-visible{outline:4px solid #f4c845;outline-offset:2px}.cell .label{font-size:clamp(7px,.82vw,11px)}.decision-impact{display:block;margin-top:4px;color:#456044;font-style:normal;font-weight:800}.inspect-note{font-size:11px;font-weight:700;color:#657263}";
-  document.head.appendChild(style);
-
   function inspectHouse(index){
     if(!G||!G.game||!$("#overlay").classList.contains("hidden"))return;
     const info=houseCardText(index);
     modal('<span class="eyebrow">CASA '+(index+1)+' DE 32 · CONSULTA</span><div class="cards-face"><span class="card-label">'+esc(info.icon+" "+info.name.toUpperCase())+'</span><h2>'+esc(info.name)+'</h2><p>'+esc(info.detail)+'</p><p class="inspect-note">Esta consulta não move o peão nem aplica o efeito.</p></div><div class="form-actions"><button class="btn primary" id="closeHouseInspect" type="button">Fechar</button></div>');
     $("#closeHouseInspect").onclick=closeModal;
   }
-  const originalDrawBoard=drawBoard;
-  drawBoard=function(){
-    originalDrawBoard.apply(this,arguments);
+  SedeHooks.on("boardRendered",function(payload){
+    const board=payload&&payload.board;if(!board)return;
     document.querySelectorAll("#board .cell").forEach(function(cell,index){
       cell.setAttribute("tabindex","0");
       cell.setAttribute("aria-label",cell.getAttribute("aria-label")+" · Ative para consultar esta casa");
@@ -43,30 +38,18 @@
         if(event.key==="Enter"||event.key===" "){event.preventDefault();inspectHouse(index)}
       };
     });
-  };
+  });
 
   /* Explica os efeitos das duas escolhas sem alterar as regras do roteiro. */
-  const originalShowDilemma=showDilemma;
-  showDilemma=function(card,readOnly){
-    originalShowDilemma.apply(this,arguments);
-    if(readOnly)return;
+  SedeHooks.on("dialogRendered",function(){
     const honest=$("#honestChoice small"),shortcut=$("#riskyChoice small");
-    if(honest)honest.insertAdjacentHTML("beforeend",'<i class="decision-impact">Efeito: mantém a transparência e recebe um Power Up.</i>');
-    if(shortcut)shortcut.insertAdjacentHTML("beforeend",'<i class="decision-impact">Efeito: aquífero −1 e avanço de 3 casas; se houver carga, ela fica marcada como maquiada.</i>');
-  };
+    if(honest&&!honest.querySelector(".decision-impact"))honest.insertAdjacentHTML("beforeend",'<i class="decision-impact">Sem custo imediato de água · recebe um Power Up.</i>');
+    if(shortcut&&!shortcut.querySelector(".decision-impact"))shortcut.insertAdjacentHTML("beforeend",'<i class="decision-impact">Aquífero −1 · avança 3 casas.</i>');
+  });
 
   /* Salva somente partidas locais neste aparelho; partidas online ficam no Firebase. */
-  const originalRender=render;
-  render=function(){
-    const result=originalRender.apply(this,arguments);
-    saveGame();
-    return result;
-  };
-  const originalEndGame=endGame;
-  endGame=function(){
-    clearSave();
-    return originalEndGame.apply(this,arguments);
-  };
+  SedeHooks.on("afterRender",saveGame);
+  SedeHooks.on("gameEnded",clearSave);
 
   window.hasSavedLocalGame=function(){return!!readSave()};
   window.restoreSavedLocalGame=function(){
@@ -94,10 +77,8 @@
   };
 
   /* Mostra a opção de retomada no menu após recarregar a página. */
-  const originalShowMainMenu=showMainMenu;
-  showMainMenu=function(){
-    originalShowMainMenu.apply(this,arguments);
-    if(G&&G.game)return;
+  SedeHooks.on("mainMenuRendered",function(payload){
+    if(payload&&payload.active)return;
     if(!readSave()||$("#menuSavedGame"))return;
     const grid=$(".menu-grid"),newGame=$("#menuNewGame");
     if(!grid||!newGame)return;
@@ -106,7 +87,7 @@
     button.textContent="↻ Retomar partida salva";
     button.onclick=window.restoreSavedLocalGame;
     newGame.insertAdjacentElement("afterend",button);
-  };
+  });
 
   render();
   showMainMenu();
@@ -115,7 +96,7 @@
 /* Camada avançada: Pecém vivo, escolhas, eventos e debriefing. */
 (()=>{
   const $=s=>document.querySelector(s);
-  const skin=document.createElement("link");skin.rel="stylesheet";skin.href="./melhorias-ambiente.css";document.head.appendChild(skin);
+
   let audio=null,muted=false;try{muted=localStorage.getItem("sede-som-muted")==="true"}catch(e){}
   function sound(kind){
     if(muted)return;
@@ -145,7 +126,7 @@
   }
   function mapSvg(){
     const state=waterState(),alert=state==="critical",water=alert?"#ad5747":"#477d8b";
-    return '<svg class="pecem-map" viewBox="0 0 520 300" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Croqui de campo do litoral oeste do Ceará com rotas de água e energia entre Porto, Parque Eólico, Data Center, Aldeia Anacé, Poços, Tribunal e Governo"><defs><pattern id="mapGrid" width="18" height="18" patternUnits="userSpaceOnUse"><path d="M18 0H0V18" fill="none" stroke="#455b4b" stroke-width=".35" opacity=".18"/></pattern><linearGradient id="mapLand" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#d8c79c"/><stop offset="1" stop-color="#b8af83"/></linearGradient><linearGradient id="mapSea" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#79a6a1"/><stop offset="1" stop-color="#426d77"/></linearGradient></defs><path d="M0 0H520V300H0Z" fill="url(#mapLand)"/><path d="M0 207Q67 196 125 211T246 205T362 211T520 199V300H0Z" fill="url(#mapSea)"/><path d="M0 207Q67 196 125 211T246 205T362 211T520 199" fill="none" stroke="#f1e6c8" stroke-width="2"/><path class="map-contour" d="M-12 63Q38 43 90 59T190 61T300 53T416 60T532 48M-8 74Q44 54 98 70T198 72T305 65T419 71T531 59M-10 88Q42 68 100 84T203 87T309 79T422 85T535 73M12 135Q68 117 121 131T225 136T328 124T445 132M4 147Q65 130 122 145T229 149T333 138T452 145M246 45Q275 30 307 41T367 44T430 35M270 54Q299 40 331 50T390 53T450 44"/><path d="M14 27H505M14 282H505" fill="none" stroke="#53624e" stroke-width=".7" stroke-dasharray="2 5" opacity=".55"/><rect width="520" height="300" fill="url(#mapGrid)"/><text x="17" y="20" class="map-topline">CADERNO DE CAMPO · PECÉM · CEARÁ</text><text x="18" y="33" class="map-note">CROQUI DO SISTEMA HÍDRICO E DE ENERGIA · 2030</text><path class="map-route map-route-water" d="M70 161C111 177 146 150 193 155S268 174 314 151S394 139 438 157"/><path class="map-route map-route-energy" d="M150 80C196 95 218 113 258 115S322 91 366 94S420 119 452 133"/><path class="map-route map-route-delivery" d="M83 160C112 125 146 97 184 82M260 115C299 125 325 145 360 159"/><path d="M68 161l7-2-2 7m108-90 5 7-8 1m174 74 7-3-1 8" fill="none" stroke="#374f44" stroke-width="1.4"/><text x="101" y="146" class="map-route-label">ROTA H₂O · R-01</text><text x="286" y="105" class="map-route-label">REDE EÓLICA · R-02</text>'+mapNode("porto",70,161,"PORTO","P-01",false)+mapNode("pocos",117,211,"POÇOS","H₂O-1",alert)+mapNode("tribunal",134,112,"TRIBUNAL","J-01",false)+mapNode("eolica",150,80,"PARQUE EÓLICO","E-01",false)+mapNode("aldeia",258,115,"ALDEIA ANACÉ","T-01",false)+mapNode("datacenter",360,159,"DATA CENTER","DC-01",alert)+mapNode("universidade",438,157,"LABORATÓRIO","U-01",false)+mapNode("governo",316,66,"GOVERNO","G-01",false)+'<g class="map-scale"><path d="M24 265h48m-48-4v8m24-8v8m24-8v8"/><text x="24" y="278">0</text><text x="63" y="278">5 KM</text></g><g class="map-north"><path d="M487 50v22m0-22-5 8m5-8 5 8"/><text x="484" y="45">N</text></g><text x="302" y="278" class="map-field-note">COLETA ▸ DESTINO · REGISTRO DE ROTA</text></svg>'
+    return '<svg class="pecem-map" viewBox="0 0 520 300" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Croqui de campo do litoral oeste do Ceará com rotas de água e energia entre Porto, Parque Eólico, Data Center, Aldeia Anacé, Poços, Tribunal e Governo"><defs><pattern id="mapGrid" width="18" height="18" patternUnits="userSpaceOnUse"><path d="M18 0H0V18" fill="none" stroke="#455b4b" stroke-width=".35" opacity=".18"/></pattern><linearGradient id="mapLand" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#d8c79c"/><stop offset="1" stop-color="#b8af83"/></linearGradient><linearGradient id="mapSea" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#79a6a1"/><stop offset="1" stop-color="#426d77"/></linearGradient></defs><path d="M0 0H520V300H0Z" fill="url(#mapLand)"/><path d="M0 207Q67 196 125 211T246 205T362 211T520 199V300H0Z" fill="url(#mapSea)"/><path d="M0 207Q67 196 125 211T246 205T362 211T520 199" fill="none" stroke="#f1e6c8" stroke-width="2"/><path class="map-contour" d="M-12 63Q38 43 90 59T190 61T300 53T416 60T532 48M-8 74Q44 54 98 70T198 72T305 65T419 71T531 59M-10 88Q42 68 100 84T203 87T309 79T422 85T535 73M12 135Q68 117 121 131T225 136T328 124T445 132M4 147Q65 130 122 145T229 149T333 138T452 145M246 45Q275 30 307 41T367 44T430 35M270 54Q299 40 331 50T390 53T450 44"/><path d="M14 27H505M14 282H505" fill="none" stroke="#53624e" stroke-width=".7" stroke-dasharray="2 5" opacity=".55"/><rect width="520" height="300" fill="url(#mapGrid)"/><text x="17" y="20" class="map-topline">CADERNO DE CAMPO · PECÉM · CEARÁ</text><text x="18" y="33" class="map-note">CROQUI DO SISTEMA HÍDRICO E DE ENERGIA · 2030</text><path class="map-route map-route-water" d="M70 161C111 177 146 150 193 155S268 174 314 151S394 139 438 157"/><path class="map-route map-route-energy" d="M150 80C196 95 218 113 258 115S322 91 366 94S420 119 452 133"/><path class="map-route map-route-delivery" d="M83 160C112 125 146 97 184 82M260 115C299 125 325 145 360 159"/><path d="M68 161l7-2-2 7m108-90 5 7-8 1m174 74 7-3-1 8" fill="none" stroke="#374f44" stroke-width="1.4"/><text x="101" y="146" class="map-route-label">ROTA H₂O · R-01</text><text x="286" y="105" class="map-route-label">REDE EÓLICA · R-02</text>'+mapNode("porto",70,161,"PORTO","P-01",false)+mapNode("pocos",117,211,"POÇOS","H₂O-1",alert)+mapNode("tribunal",134,112,"TRIBUNAL","J-01",false)+mapNode("eolica",150,80,"PARQUE EÓLICO","E-01",false)+mapNode("aldeia",258,115,"ALDEIA ANACÉ","T-01",false)+mapNode("datacenter",360,159,"DATA CENTER","DC-01",alert)+mapNode("universidade",438,157,"UNIVERSIDADE","U-01",false)+mapNode("governo",316,66,"GOVERNO","G-01",false)+'<g class="map-scale"><path d="M24 265h48m-48-4v8m24-8v8m24-8v8"/><text x="24" y="278">0</text><text x="63" y="278">5 KM</text></g><g class="map-north"><path d="M487 50v22m0-22-5 8m5-8 5 8"/><text x="484" y="45">N</text></g><text x="302" y="278" class="map-field-note">COLETA ▸ DESTINO · REGISTRO DE ROTA</text></svg>'
   }
   function routeMarksSvg(){
     const cargo=G&&current()&&current().cargo;if(!cargo)return "";
@@ -162,34 +143,51 @@
     const headline=G&&G.lastEventRound===G.round&&G.lastEvent?G.lastEvent:G&&(G.newsTicker||G.log&&G.log[0]&&G.log[0].text)||"A partida começa na casa 1. Decisões locais afetam o aquífero comum.";
     return mapSvg()+routeMarksSvg()+'<span class="water-state-label">'+label+'</span><div class="news-ticker" aria-live="polite"><b>JORNAL DO PECÉM</b><span>'+esc(headline)+'</span></div>'
   }
-  const oldDraw=drawBoard;
-  drawBoard=function(){oldDraw.apply(this,arguments);const board=$("#board"),state=waterState();board.classList.remove("water-healthy","water-dry","water-critical");board.classList.add("water-"+state);const frame=board.closest(".board-frame");if(frame)frame.dataset.aquifer=state;document.querySelectorAll("#board .cell").forEach(function(cell,i){const seed=seedAt(i),kind=seed?seed.id:houseTypeAt(i),ico=cell.querySelector(".ico");cell.classList.toggle("datacenter",kind==="datacenter");cell.classList.toggle("pocos",kind==="pocos");if(ico)ico.innerHTML=iconSvg(paths[kind]?kind:"neutral");cell.querySelectorAll(".scarcity-flag").forEach(x=>x.remove());if(state==="critical"&&(kind==="datacenter"||kind==="pocos")||state==="dry"&&kind==="datacenter"){const flag=document.createElement("span");flag.className="scarcity-flag";flag.textContent="!";flag.title="Alerta de abastecimento";flag.setAttribute("aria-label","Alerta de escassez de água");cell.appendChild(flag)}const token=cell.querySelector(".tokens .token");if(token&&G&&G.moving&&i===G.players[G.pi].pos)token.classList.add("moving-token")});const center=board.querySelector(".board-center");if(center){center.innerHTML=centerHtml();center.classList.add("pecem-center");center.setAttribute("aria-label","Mapa do Pecém, escala de campo e notícia; consulte a barra para o nível exato do aquífero.")}};
-  const oldLog=addLog;addLog=function(message){oldLog.apply(this,arguments);if(G)G.newsTicker=String(message)};
-  const oldMake=makeGame;makeGame=function(){const s=SedeRules.normalize(oldMake.apply(this,arguments));s.sessionId="game-"+Date.now()+"-"+Math.random().toString(36).slice(2,8);s.decisions=[];s.deliveryResults=[];s.events=[];s.newsTicker="A partida começa no tabuleiro do Pecém.";s.ethicalCounters={};return s};
-  function ensureStats(){if(!G)return;G.decisions=G.decisions||[];G.deliveryResults=G.deliveryResults||[];G.events=G.events||[];G.ethicalCounters=G.ethicalCounters||{};(G.players||[]).forEach(p=>{if(!G.ethicalCounters[p.id])G.ethicalCounters[p.id]={honest:0,shortcut:0,honestDelivery:0,disguisedDelivery:0}})}
-  const oldApply=window.applyOnlineState;if(oldApply)window.applyOnlineState=function(){const r=oldApply.apply(this,arguments);ensureStats();return r};
-  const oldRender=render;let previous=null;
+  function decorateBoard(payload){
+    const board=payload&&payload.board;if(!board)return;const state=waterState();board.classList.remove("water-healthy","water-dry","water-critical");board.classList.add("water-"+state);const frame=board.closest(".board-frame");if(frame)frame.dataset.aquifer=state;
+    document.querySelectorAll("#board .cell").forEach(function(cell,i){const seed=seedAt(i),kind=seed?seed.id:houseTypeAt(i),ico=cell.querySelector(".ico");cell.classList.toggle("datacenter",kind==="datacenter");cell.classList.toggle("pocos",kind==="pocos");if(ico)ico.innerHTML=iconSvg(paths[kind]?kind:"neutral");cell.querySelectorAll(".scarcity-flag").forEach(x=>x.remove());if(state==="critical"&&(kind==="datacenter"||kind==="pocos")||state==="dry"&&kind==="datacenter"){const flag=document.createElement("span");flag.className="scarcity-flag";flag.textContent="!";flag.title="Alerta de abastecimento";flag.setAttribute("aria-label","Alerta de escassez de água");cell.appendChild(flag)}const token=cell.querySelector(".tokens .token");if(token&&G&&G.moving&&i===G.players[G.pi].pos)token.classList.add("moving-token")});
+    const center=board.querySelector(".board-center");if(center){center.innerHTML=centerHtml();center.classList.add("pecem-center");center.setAttribute("aria-label","Mapa do Pecém, escala de campo e notícia; consulte a barra para o nível exato do aquífero.")}
+  }
+  SedeHooks.on("boardRendered",decorateBoard);
+  function ensureStats(){if(!G)return;G.decisions=G.decisions||[];G.deliveryResults=G.deliveryResults||[];G.events=G.events||[];G.ethicalCounters=G.ethicalCounters||{};(G.players||[]).forEach(p=>{if(!G.ethicalCounters[p.id])G.ethicalCounters[p.id]={honest:0,shortcut:0,honestDelivery:0,disguisedDelivery:0,blocked:0,agreement:0}})}
+  SedeHooks.on("onlineStateApplied",ensureStats);
+  let previous=null;
   function floatAt(target,text,good){if(!target)return;const el=document.createElement("span");el.className="float-delta "+(good?"good":"bad");el.textContent=text;const r=target.getBoundingClientRect();el.style.left=(r.left+r.width/2+window.scrollX)+"px";el.style.top=(r.top+window.scrollY)+"px";document.body.appendChild(el);setTimeout(()=>el.remove(),1250)}
-  render=function(){const prior=previous,id=G&&(G.sessionId||"shared"),water=G?+G.aquifer:10,pos=G?(G.players||[]).map(p=>p.pos):[],score=G?(G.players||[]).map(p=>p.score):[];const out=oldRender.apply(this,arguments);mountSound();const meter=$("#trackWrap");if(meter){meter.classList.remove("water-healthy","water-dry","water-critical");meter.classList.add("water-"+waterState())}if(G){ensureStats();const same=prior&&prior.id===id,change=same?water-prior.water:0;if(change){floatAt($("#trackWrap .track")||$("#trackWrap"),(change>0?"+":"")+change,change>0);sound(change>0?"water":"warning")}if(same&&prior.pos)pos.forEach((p,i)=>{if(p!==prior.pos[i])sound("step");const d=p===undefined?0:score[i]-(prior.score[i]||0);if(d){floatAt($("#players .player-row:nth-child("+(i+1)+")"),(d>0?"+":"")+d+" pts",d>0);if(d>0)sound("score")}});previous={id:id,water:water,pos:pos,score:score}}else previous=null;return out};
-  function cardFx(){const face=$("#overlay .cards-face");if(!face)return;const title=$("#overlay .eyebrow"),txt=title?title.textContent.toLowerCase():"";face.classList.add("physical-card");if(face.querySelector(".impact-seal"))return;const seal=document.createElement("span");seal.className="impact-seal "+(txt.includes("dilema")||txt.includes("crise")?"risk":txt.includes("entrega")?"water":"");seal.textContent=txt.includes("entrega")?"IMPACTO HÍDRICO":txt.includes("dilema")?"ESCOLHA ÉTICA":txt.includes("power")?"RECURSO DE APOIO":"PECÉM · CAMPO";face.insertBefore(seal,face.firstChild)}
-  ["showDeliveryCard","showDilemma","showPowerCard","showHouseCard"].forEach(name=>{if(typeof window[name]!=="function")return;const fn=window[name];window[name]=function(){const r=fn.apply(this,arguments);requestAnimationFrame(cardFx);sound("card");return r}});
-  const oldCargo=renderCargo;renderCargo=function(){const r=oldCargo.apply(this,arguments),card=$("#cargoPanel .cargo-card"),cargo=G&&current()&&current().cargo;if(card&&!card.querySelector(".impact-seal")){const seal=document.createElement("span");seal.className="impact-seal water";seal.textContent=cargo&&cargo.serviceLevel==="express"?"SLA EXPRESSO · 2 RODADAS":"SLA PADRÃO · 3 RODADAS";card.insertBefore(seal,card.firstChild)}return r};
-  const oldRoll=rollDie;rollDie=async function(){const box=$(".dice-box");if(box)box.classList.add("rolling-local");sound("dice");try{return await oldRoll.apply(this,arguments)}finally{if(box)box.classList.remove("rolling-local")}};
-  const oldDilemma=resolveDilemma;resolveDilemma=async function(honest,card){if(G&&G.pendingChoice&&G.pendingChoice.type==="dilemma"&&isMyTurn()){ensureStats();const p=current(),key=honest?"honest":"shortcut";G.decisions.push({round:G.round,playerId:p.id,playerName:p.name,choice:key,title:card.title});G.ethicalCounters[p.id][key]++}return await oldDilemma.apply(this,arguments)};
-  const oldDelivery=completeDelivery;completeDelivery=function(player,territory){const c=player&&player.cargo;if(G&&c&&c.pickedUp&&c.to===territory.house){ensureStats();const honest=!c.maquiada;G.deliveryResults.push({round:G.round,playerId:player.id,playerName:player.name,honest:honest,card:c.name});G.ethicalCounters[player.id][honest?"honestDelivery":"disguisedDelivery"]++}return oldDelivery.apply(this,arguments)};
+  SedeHooks.on("afterRender",function(){
+    const prior=previous,id=G&&(G.sessionId||"shared"),water=G?+G.aquifer:10,pos=G?(G.players||[]).map(p=>p.pos):[],score=G?(G.players||[]).map(p=>p.score):[];
+    mountSound();const meter=$("#trackWrap");if(meter){meter.classList.remove("water-healthy","water-dry","water-critical");meter.classList.add("water-"+waterState())}
+    if(G){ensureStats();const same=prior&&prior.id===id,change=same?water-prior.water:0;if(change){floatAt($("#trackWrap .track")||$("#trackWrap"),(change>0?"+":"")+change,change>0);sound(change>0?"water":"warning")}if(same&&prior.pos)pos.forEach((p,i)=>{if(p!==prior.pos[i])sound("step");const d=p===undefined?0:score[i]-(prior.score[i]||0);if(d){floatAt($("#players .player-row:nth-child("+(i+1)+")"),(d>0?"+":"")+d+" pts",d>0);if(d>0)sound("score")}});previous={id:id,water:water,pos:pos,score:score}}else previous=null;
+  });  function cardFx(){const face=$("#overlay .cards-face");if(!face)return;const title=$("#overlay .eyebrow"),txt=title?title.textContent.toLowerCase():"";face.classList.add("physical-card");if(face.querySelector(".impact-seal"))return;const seal=document.createElement("span");seal.className="impact-seal "+(txt.includes("dilema")||txt.includes("crise")?"risk":txt.includes("entrega")?"water":"");seal.textContent=txt.includes("entrega")?"IMPACTO HÍDRICO":txt.includes("dilema")?"ESCOLHA ÉTICA":txt.includes("power")?"RECURSO DE APOIO":"PECÉM · CAMPO";face.insertBefore(seal,face.firstChild)}
+  SedeHooks.on("dialogRendered",function(){requestAnimationFrame(function(){if($("#overlay .cards-face")){cardFx();sound("card")}})});
+  SedeHooks.on("actionStarted",function(event){if(event&&event.type==="roll")sound("dice")});
+  SedeHooks.on("dilemmaResolved",function(event){if(!G||!event||!event.player)return;ensureStats();const player=event.player,key=event.honest?"honest":"shortcut";G.decisions.push({round:G.round,playerId:player.id,playerName:player.name,choice:key,title:event.card&&event.card.title});G.ethicalCounters[player.id][key]++});
+  SedeHooks.on("deliveryResolved",function(event){if(!G||!event||!event.player)return;ensureStats();G.deliveryResults.push({round:G.round,playerId:event.player.id,playerName:event.player.name,honest:!!event.honest,card:event.cargo&&event.cargo.name});G.ethicalCounters[event.player.id][event.honest?"honestDelivery":"disguisedDelivery"]++});
   const EVENTS=[
-    {id:"estiagem",name:"Estiagem prolongada no Ceará",description:"A estiagem pressiona os poços: aquífero −1.",run:()=>SedeRules.changeAquifer(G,-1,"Estiagem prolongada")},
-    {id:"pico-ia",name:"Pico de processamento de IA",description:"A demanda computacional cresce: aquífero −1.",run:()=>SedeRules.changeAquifer(G,-1,"Pico de processamento de IA")},
-    {id:"fiscalizacao",name:"Fiscalização ambiental no Tribunal",description:"Cargas maquiadas ativas são devolvidas; cada responsável perde 2 pontos.",run:()=>{let found=false;G.players.forEach(p=>{if(p.cargo&&p.cargo.maquiada){found=true;p.score-=2;returnCargo(p,"fiscalização ambiental");addLog(p.name+" teve carga maquiada auditada e perdeu 2 pontos.")}});if(!found)addLog("Fiscalização ambiental: nenhuma carga maquiada ativa foi encontrada.")}},
-    {id:"reuso",name:"Mutirão de reuso de água",description:"Comunidade e universidade recuperam 1 ponto do aquífero.",run:()=>SedeRules.changeAquifer(G,1,"Mutirão de reuso")},
-    {id:"acordo",name:"Acordo regional de poupança",description:"Os territórios coordenam a demanda: aquífero +1.",run:()=>SedeRules.changeAquifer(G,1,"Acordo regional de poupança")}
+    {id:"estiagem",name:"Estiagem prolongada no Ceará",description:"A estiagem pressiona os poços: aquífero −1."},
+    {id:"pico-ia",name:"Pico de processamento de IA",description:"A demanda computacional cresce: aquífero −1."},
+    {id:"fiscalizacao",name:"Fiscalização ambiental no Tribunal",description:"Cargas maquiadas ativas são devolvidas; cada responsável perde 2 pontos."},
+    {id:"reuso",name:"Mutirão de reuso de água",description:"Comunidade e universidade recuperam 1 ponto do aquífero."},
+    {id:"acordo",name:"Acordo regional de poupança",description:"Os territórios coordenam a demanda: aquífero +1."}
   ];
-  const oldAdvance=advanceRound;advanceRound=function(){const ok=oldAdvance.apply(this,arguments);if(!ok||!G||!G.game)return ok;const r=G.round;if(r>1&&(r-1)%2===0&&G.lastEventRound!==r){G.lastEventRound=r;ensureStats();const e=EVENTS[Math.floor(Math.random()*EVENTS.length)];e.run();G.events.push({round:r,id:e.id,name:e.name,description:e.description});G.lastEvent=e.name+": "+e.description;G.newsTicker="EVENTO GLOBAL · "+G.lastEvent;addLog("Evento global da rodada "+r+" — "+G.lastEvent);render();toast("Evento global: "+e.name);sound(e.id==="estiagem"||e.id==="pico-ia"?"warning":"water");if(G.aquifer<=0){endGame(true);return false}}return true};
-  const oldRules=showRules;showRules=function(){const r=oldRules.apply(this,arguments),grid=$("#overlay .rule-grid");if(grid&&!grid.querySelector(".global-event-rule")){const item=document.createElement("div");item.className="rule-item global-event-rule";item.innerHTML="<b>Eventos globais</b>A cada duas rodadas, um acontecimento pode alterar o aquífero ou fiscalizar cargas maquiadas. Acompanhe o Jornal do Pecém no centro do tabuleiro.";grid.appendChild(item)}return r};
-  function debriefHtml(){ensureStats();const count=G.ethicalCounters||{},players=G.players||[],best=players.map(p=>({p:p,n:(count[p.id].honest||0)+(count[p.id].honestDelivery||0)})).sort((a,b)=>b.n-a.n),risk=players.map(p=>({p:p,n:(count[p.id].shortcut||0)+(count[p.id].disguisedDelivery||0)})).sort((a,b)=>b.n-a.n),ethical=(G.decisions||[]).filter(x=>x.choice==="honest").length,shortcuts=(G.decisions||[]).filter(x=>x.choice==="shortcut").length,good=(G.deliveryResults||[]).filter(x=>x.honest).length,bad=(G.deliveryResults||[]).filter(x=>!x.honest).length,events=(G.events||[]).map(x=>esc(x.name)).join(" · ")||"Nenhum evento global ocorreu.";const leader=best[0]&&best[0].n?esc(best[0].p.name)+" ("+best[0].n+" escolha(s) transparentes)":"Nenhuma decisão transparente registrada.";const risky=risk[0]&&risk[0].n?esc(risk[0].p.name)+" ("+risk[0].n+" atalho(s)/entrega(s) maquiada(s))":"Nenhum atalho ou entrega maquiada registrado.";const outcome=G.aquifer<=0?"A competição individual gerou uma perda coletiva: o recurso compartilhado chegou a zero.":"O grupo preservou água suficiente para concluir a simulação.";return '<section class="debrief"><h3>Debriefing · o que as decisões mostraram?</h3><p>'+outcome+' A escala de 0 a 10 é didática e não equivale a litros: o consumo real varia com refrigeração, fonte de energia, clima e operação do data center.</p><div class="debrief-grid"><div class="debrief-stat"><b>Mais decisões transparentes</b>'+leader+'</div><div class="debrief-stat"><b>Mais decisões de risco</b>'+risky+'</div><div class="debrief-stat"><b>Escolhas nos dilemas</b>'+ethical+' honestas · '+shortcuts+' atalhos</div><div class="debrief-stat"><b>Entregas concluídas</b>'+good+' honestas · '+bad+' maquiadas</div></div><p class="small-note"><b>Eventos:</b> '+events+'</p><p class="small-note">Para debater: quando o ganho individual justifica um custo ambiental compartilhado pela comunidade?</p></section>'}
+  SedeHooks.on("roundAdvanced",function(event){
+    if(!G||!G.game)return;const round=event&&event.round||G.round;if(round<=1||(round-1)%2!==0||G.lastEventRound===round)return;
+    G.lastEventRound=round;ensureStats();const item=EVENTS[Math.floor(Math.random()*EVENTS.length)],applied=SedeRules.applyGlobalEvent(G,item.id);G=applied.state;G.events.push({round:round,id:item.id,name:item.name,description:item.description});G.lastEvent=item.name+": "+item.description;G.newsTicker="EVENTO GLOBAL · "+G.lastEvent;
+    if(applied.messages.length)applied.messages.forEach(addLog);else addLog("Evento global da rodada "+round+" — "+item.name+". "+item.description);
+    render();toast("Evento global: "+item.name);sound(item.id==="estiagem"||item.id==="pico-ia"?"warning":"water")
+  });
+  function leaders(rows){
+    const max=rows.length?rows[0].n:0;
+    return max?rows.filter(function(row){return row.n===max}).map(function(row){return esc(row.p.name)}).join(" · "):"nenhum registro";
+  }
+  function debriefHtml(){
+    ensureStats();const count=G.ethicalCounters||{},players=G.players||[],best=players.map(p=>({p:p,n:(count[p.id].honest||0)+(count[p.id].honestDelivery||0)})).sort((a,b)=>b.n-a.n),risk=players.map(p=>({p:p,n:(count[p.id].shortcut||0)+(count[p.id].disguisedDelivery||0)})).sort((a,b)=>b.n-a.n);
+    const ethical=(G.decisions||[]).filter(x=>x.choice==="honest").length,shortcuts=(G.decisions||[]).filter(x=>x.choice==="shortcut").length,good=(G.deliveryResults||[]).filter(x=>x.honest).length,bad=(G.deliveryResults||[]).filter(x=>!x.honest).length,events=(G.events||[]).map(x=>esc(x.name)).join(" · ")||"Nenhum evento global.";
+    const transparent=leaders(best),risky=leaders(risk),elapsed=Math.max(1,Math.floor((G.durationMs||0)/1000)),duration=elapsed<60?elapsed+" s":Math.floor(elapsed/60)+" min"+(elapsed%60?" "+(elapsed%60)+" s":""),waterCost=10-(Number(G.aquifer)||0);
+    const waterText=waterCost>=0?"−"+waterCost:"+"+Math.abs(waterCost),outcome=G.aquifer<=0?"Perda coletiva: os poços chegaram a zero.":"A mesa encerrou com água no aquífero.";
+    return '<section class="debrief"><h3>Fechamento de campo</h3><p>'+outcome+' Unidades didáticas; sem conversão direta para litros ou kWh.</p><div class="debrief-grid"><div class="debrief-stat"><b>QUANTO CUSTA?</b>Variação líquida do aquífero: '+waterText+' · saldo '+G.aquifer+'/10 · '+duration+'.</div><div class="debrief-stat"><b>PARA QUEM?</b>O custo recaiu sobre a água comum. Mais atalhos e cargas maquiadas: '+risky+'.</div><div class="debrief-stat"><b>QUEM DECIDIU?</b>'+ethical+' respostas transparentes · '+shortcuts+' atalhos. Mais escolhas transparentes: '+transparent+'.</div><div class="debrief-stat"><b>SEM AUDITORIA</b>'+bad+' carga(s) maquiada(s) chegaram ao destino · '+(G.auditCount||0)+' fiscalização(ões) · '+(G.auditFinds||0)+' carga(s) revelada(s).</div><div class="debrief-stat"><b>EFEITO REBOTE</b>'+(G.usedDeliveries||[]).length+' entrega(s) concluída(s) · '+(G.reboundCount||0)+' ativação(ões).</div></div><p class="small-note"><b>Eventos:</b> '+events+'</p><p class="small-note">Debate: quem arcou com o desgaste e quem escolheu a rota?</p></section>'
+  }
   function putDebrief(){const box=$("#overlay .modal");if(!box||box.querySelector(".debrief"))return;const actions=box.querySelector(".form-actions");if(actions)actions.insertAdjacentHTML("beforebegin",debriefHtml());else box.insertAdjacentHTML("beforeend",debriefHtml())}
-  const oldEnd=endGame;endGame=function(){const r=oldEnd.apply(this,arguments);requestAnimationFrame(putDebrief);return r};
-  const oldShowEnd=showEndFromState;showEndFromState=function(){const r=oldShowEnd.apply(this,arguments);requestAnimationFrame(putDebrief);return r};
+  SedeHooks.on("gameEnded",function(){requestAnimationFrame(putDebrief)});
   mountSound();render()
 })();
 
@@ -226,8 +224,7 @@
     if(key===announced||key===pending)return;
     clearTimeout(timer);pending=key;timer=setTimeout(tryShow,220)
   }
-  const baseRender=render;
-  render=function(){const result=baseRender.apply(this,arguments);requestCue();return result};
+  SedeHooks.on("afterRender",requestCue);
 })();
 
 
@@ -251,7 +248,7 @@
   }
   function applyChoice(honest,card){
     G.pendingChoice={type:"dilemma",card:card};
-    return applyDilemma.call(this,honest,card);
+    G.bypassCouncil=true;const result=applyDilemma.call(this,honest,card);G.bypassCouncil=false;return result;
   }
   function showCouncil(){
     const pending=G&&G.pendingChoice;if(!pending)return;
@@ -272,13 +269,13 @@
     }
   }
   function submitCouncil(playerId,choice){
-    const pending=G&&G.pendingChoice,voter=responder();
+    let pending=G&&G.pendingChoice;const voter=responder();
     if(!pending||pending.type!=="council"||!voter||voter.id!==playerId||!maySpeak(voter))return;
     if(choice==="veto"){
-      if(voter.interventionTokens<=0)return;
-      voter.interventionTokens--;pending.vetoBy=playerId;recordIntervention(voter,"blocked",pending.card);finishCouncil("veto");return;
+      const transition=SedeRules.applyCouncil(G,playerId,pending.actorId,"veto");if(!transition.valid)return;
+      G=transition.state;const activePending=G.pendingChoice;activePending.vetoBy=playerId;recordIntervention(G.players.find(player=>player.id===playerId),"blocked",activePending.card);finishCouncil("veto");return;
     }
-    if(choice==="agreement"&&!pending.agreementBy){pending.agreementBy=playerId;recordIntervention(voter,"agreement",pending.card)}
+    if(choice==="agreement"&&!pending.agreementBy){const transition=SedeRules.applyCouncil(G,playerId,pending.actorId,"agreement");if(!transition.valid)return;G=transition.state;pending=G.pendingChoice;pending.agreementBy=playerId;recordIntervention(G.players.find(player=>player.id===playerId),"agreement",pending.card);}
     pending.index++;if(pending.index>=pending.responders.length)finishCouncil();else{render();showCouncil();sync()}
   }
   function finishCouncil(result){
@@ -290,40 +287,22 @@
     const card=pending.card,actor=G.players.find(player=>player.id===pending.actorId)||current();
     G.pendingChoice=null;closeModal();
     if(result==="veto"){
-      actor.score-=1;addLog("O Tribunal bloqueou o atalho de "+actor.name+". Uma ficha foi gasta; o aquífero foi preservado e o responsável perdeu 1 ponto.");render();sync();return;
+      addLog("O Tribunal bloqueou o atalho de "+actor.name+". Uma ficha foi gasta; o aquífero foi preservado e o responsável perdeu 1 ponto.");render();sync();return;
     }
     const honest=result==="agreement";
     if(honest)addLog(actor.name+" aceitou o Acordo de Poupança proposto pela mesa.");
     applyChoice(honest,card);
   }
-  const previousResolve=resolveDilemma;
-  resolveDilemma=async function(honest,card){
-    if(!G||!G.pendingChoice||G.pendingChoice.type!=="dilemma"||honest)return previousResolve.apply(this,arguments);
-    const actor=current(),responders=G.players.filter(player=>player.id!==actor.id).map(player=>player.id);
-    G.pendingChoice={type:"council",actorId:actor.id,card:card,responders:responders,index:0,agreementBy:null,vetoBy:null};
-    addLog(actor.name+" propôs um atalho. A mesa pode acionar o Tribunal ou negociar poupança.");render();showCouncil();await sync();
-  };
-  const oldOpenChoice=openCurrentChoice;
-  openCurrentChoice=function(readOnly){
-    if(G&&G.pendingChoice&&(G.pendingChoice.type==="council"||G.pendingChoice.type==="councilActor")){showCouncil();return}
-    return oldOpenChoice.apply(this,arguments);
-  };
-  const oldApplyState=window.applyOnlineState;
-  if(oldApplyState)window.applyOnlineState=function(){const result=oldApplyState.apply(this,arguments);if(G&&G.pendingChoice&&(G.pendingChoice.type==="council"||G.pendingChoice.type==="councilActor"))showCouncil();return result};
-  const oldRules=showRules;
-  showRules=function(){
-    const result=oldRules.apply(this,arguments),grid=$("#overlay .rule-grid");if(!grid)return result;
-    const entries=[
-      ["council-rule","Negociação no Tribunal","Quando alguém propõe um atalho, os demais podem gastar uma ficha para bloqueá-lo ou propor um Acordo de Poupança. Quem propôs decide se aceita."],
-      ["delivery-rule","Despacho e pegada","Cada carga tem SLA padrão (3 rodadas) ou expresso (2 rodadas, aquífero −1 e pegada maior). Compare prazo, pontos e impacto antes de escolher."],
-      ["contract-rule","Contrato regional","Passe por Porto, Parque Eólico e Data Center. Duas ou mais pessoas precisam participar até a rodada 6; quem participa recebe pontos e ajuda a recuperar o aquífero."],
-      ["synergy-rule","Sinergias de campo","O Tribunal recupera fichas de intervenção; a eólica pode dar crédito de energia; a passagem pela Aldeia Anacé com carga transparente prepara um bônus."],
-      ["footprint-rule","Registro didático","Água e energia são unidades de comparação internas ao jogo. As faixas de pegada e a escala do aquífero não representam medições reais."]
-    ];
-    entries.forEach(function(entry){if(grid.querySelector("."+entry[0]))return;const item=document.createElement("div");item.className="rule-item "+entry[0];item.innerHTML="<b>"+entry[1]+"</b>"+entry[2];grid.appendChild(item)});
-    return result
-  };
-})();
+  SedeHooks.on("beforeDilemma",function(event){
+    if(!G||!G.pendingChoice||G.pendingChoice.type!=="dilemma"||!event||!event.player)return;
+    const actor=event.player,responders=G.players.filter(player=>player.id!==actor.id).map(player=>player.id);
+    G.pendingChoice={type:"council",actorId:actor.id,card:event.card,responders:responders,index:0,agreementBy:null,vetoBy:null};
+    addLog(actor.name+" propôs um atalho. A mesa pode acionar o Tribunal ou negociar poupança.");render();showCouncil();sync();return true;
+  });
+  SedeHooks.on("renderChoice",function(event){
+    if(!event||!event.choice||!["council","councilActor"].includes(event.choice.type))return;
+    showCouncil();return true;
+  });})();
 
 
 /* Fecha o relatório com a série do aquífero, contrato e pegadas individuais. */
@@ -350,8 +329,7 @@
     const team='<section class="report-section"><h4>Fechamento de equipe</h4><p class="small-note"><b>Contrato:</b> '+esc(contractText)+' <span class="contract-result">Progresso: '+(contract.visitedSites||[]).length+'/'+(contract.sites||[]).length+' pontos.</span></p><div class="report-footprints">'+players+'</div></section>';
     report.insertAdjacentHTML("beforeend",history+team);
   }
-  const oldEnd=endGame;endGame=function(){const result=oldEnd.apply(this,arguments);requestAnimationFrame(addReportDetails);return result};
-  const oldShowEnd=showEndFromState;showEndFromState=function(){const result=oldShowEnd.apply(this,arguments);requestAnimationFrame(addReportDetails);return result};
+  SedeHooks.on("gameEnded",function(){requestAnimationFrame(addReportDetails)});
 })();
 
 
