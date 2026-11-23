@@ -178,3 +178,38 @@
 
 
 
+/* Aviso animado e não bloqueante para o jogador da vez. */
+(()=>{
+  let announced="",pending="",timer=0,hideTimer=0;
+  const $=selector=>document.querySelector(selector);
+  function showCue(player,key){
+    let cue=$("#turnSplash");if(cue)cue.remove();
+    cue=document.createElement("aside");cue.id="turnSplash";cue.setAttribute("role","status");cue.setAttribute("aria-live","polite");
+    const index=G.players.indexOf(player);
+    cue.innerHTML='<div class="turn-splash-card"><span class="turn-splash-piece" style="--piece-color:'+esc(player.color)+'">'+(index+1)+'</span><div class="turn-splash-copy"><small>SEDE DE NUVEM · PECÉM</small><strong>AGORA É O SEU TURNO!</strong><b>'+esc(player.name)+'</b><span>Prepare sua decisão e role o dado.</span></div><button type="button" class="turn-splash-close" aria-label="Fechar aviso">×</button></div>';
+    document.body.appendChild(cue);
+    requestAnimationFrame(()=>cue.classList.add("turn-splash-visible"));
+    cue.querySelector(".turn-splash-close").onclick=()=>dismiss(cue);
+    clearTimeout(hideTimer);hideTimer=setTimeout(()=>dismiss(cue),2800);
+  }
+  function dismiss(cue){if(!cue||!cue.isConnected)return;cue.classList.remove("turn-splash-visible");setTimeout(()=>cue.remove(),300)}
+  function tryShow(){
+    timer=0;
+    if(!G||!G.game||!rulesSeen||!isMyTurn()||!current()){pending="";return}
+    const p=current(),key=(G.sessionId||"partida")+":"+G.turnSerial+":"+p.id;
+    if(key!==pending){pending="";return}
+    const overlay=$("#overlay");
+    if(overlay&&!overlay.classList.contains("hidden")){timer=setTimeout(tryShow,300);return}
+    pending="";if(announced===key)return;announced=key;showCue(p,key)
+  }
+  function requestCue(){
+    if(!G||!G.game||!rulesSeen||!isMyTurn()||!current())return;
+    const p=current(),key=(G.sessionId||"partida")+":"+G.turnSerial+":"+p.id;
+    if(key===announced||key===pending)return;
+    clearTimeout(timer);pending=key;timer=setTimeout(tryShow,220)
+  }
+  const baseRender=render;
+  render=function(){const result=baseRender.apply(this,arguments);requestCue();return result};
+})();
+
+
