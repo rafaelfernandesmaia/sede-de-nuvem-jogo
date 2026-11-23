@@ -13,6 +13,7 @@
     }catch(error){return null}
   }
   function clearSave(){try{localStorage.removeItem(SAVE_KEY)}catch(error){}}
+  window.clearSavedLocalGame=clearSave;
   function saveGame(){
     try{
       if(G&&G.game&&!G.online)localStorage.setItem(SAVE_KEY,JSON.stringify(G));
