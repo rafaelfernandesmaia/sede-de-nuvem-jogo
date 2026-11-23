@@ -435,6 +435,7 @@ function showEndFromState(){
 $("rollBtn").onclick=rollDie;$("endTurnBtn").onclick=function(){finishTurn(false)};$("rulesBtn").onclick=function(){showRules(false)};$("componentsBtn").onclick=showComponents;$("settingsTop").onclick=showSettings;$("newGameBtn").onclick=setup;$("onlineTop").onclick=function(){if(window.openOnline)window.openOnline()};
 applySettings();setup();
 </script>
+<script src="./melhorias.js"></script>
 <script src="./firebase-config.js"></script>
 <script type="module">
 const SDK="https://www.gstatic.com/firebasejs/13.4.0/";let app=null,auth=null,db=null,uid=null,activeRoom=null,unsubs=[];
