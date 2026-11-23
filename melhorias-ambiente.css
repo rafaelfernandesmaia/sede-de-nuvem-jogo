@@ -204,3 +204,44 @@ body.high-contrast .player-row.current{outline:3px solid #285b3b;outline-offset:
 .dispatch-instruction{font-size:14px!important;font-weight:800}
 .rules-modal .rule-callout{font-size:14px}
 @media(max-width:520px){.side{grid-template-columns:1fr}.top-actions{gap:6px}.top-actions .btn{font-size:11px}}
+
+/* Despacho: destaque para a rota e leitura rápida do custo de cada prazo. */
+.dispatch-modal-heading{margin:0 1px 13px;padding-bottom:9px;border-bottom:1px solid #c4b58e}
+.dispatch-modal-heading h2{margin:0;color:#2f4e3a;font-size:19px;letter-spacing:-.02em}
+.dispatch-card{padding:15px 18px 13px;border:1px solid #a58d60;border-radius:3px 8px 3px 8px;background-color:#fffaf0;background-image:repeating-linear-gradient(0deg,transparent 0 28px,#8d785308 29px,transparent 30px);box-shadow:2px 3px 9px #40351f20}
+.dispatch-heading{align-items:center;gap:14px;padding-bottom:10px}
+.dispatch-heading .card-label{font-size:10px;line-height:1.4}
+.dispatch-stamps{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex:none}
+.dispatch-place{padding:4px 6px;border:1px solid #81906c;background:#edf0df;color:#43583e;font:700 9px var(--mono);letter-spacing:.03em;white-space:nowrap}
+.dispatch-heading .dispatch-stamp{padding:4px 7px;background:#fff6e8;color:#913f35;font-size:9px;white-space:nowrap}
+.dispatch-meta{grid-template-columns:minmax(100px,.48fr) minmax(0,1.52fr);gap:14px;margin-bottom:10px;padding:9px 0 10px}
+.dispatch-meta small{font-size:9px;letter-spacing:.09em}
+.dispatch-meta b{font-size:12px;line-height:1.35}
+.dispatch-card h3{margin:10px 0 5px;font-size:21px;line-height:1.2;letter-spacing:-.02em}
+.dispatch-card>p:not(.dispatch-instruction){margin:0;color:#344b3b;font-size:14px;line-height:1.45}
+.dispatch-instruction{margin:10px 0 0;padding-top:8px;font-size:12px!important;line-height:1.35}
+.delivery-decision{align-items:baseline;margin:15px 0 7px;padding-bottom:7px}
+.delivery-decision span{font-size:14px;letter-spacing:.01em}
+.delivery-decision small{font:500 10px/1.4 var(--mono);color:#465943;text-align:right}
+.delivery-levels{grid-template-columns:minmax(0,.94fr) minmax(0,1.06fr);gap:13px;margin-top:8px}
+.delivery-levels .delivery-choice{position:relative;align-items:stretch;gap:7px;min-height:153px;padding:12px 14px 11px;border:1px solid #70815d;border-radius:3px 8px 3px 8px;background:#f0f2e5;box-shadow:0 3px 8px #31432b20;text-align:left;transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease}
+.delivery-levels .delivery-choice.risky{border-color:#a65340;background:#f7e9df;box-shadow:0 3px 8px #793e3020}
+.delivery-choice-code{display:flex;align-items:center;gap:6px;font:700 10px var(--mono);letter-spacing:.04em;color:#44573c}
+.delivery-choice-code b{margin-left:auto;padding:2px 5px;border:1px solid #a8b093;background:#f8f6e9;font-size:9px}
+.delivery-choice.risky .delivery-choice-code{color:#86483b}
+.delivery-choice.risky .delivery-choice-code b{border-color:#c68d7d;background:#fff4e9;color:#86483b}
+.delivery-choice-time{display:flex;align-items:baseline;gap:7px;color:#304a37}
+.delivery-choice-time strong{font-size:27px;line-height:1}
+.delivery-choice-time span{font-size:13px;font-weight:700}
+.delivery-choice-reward{font-size:12px;font-weight:800;line-height:1.35;color:#344b3b}
+.delivery-choice-reward i{margin:0 3px;color:#788064;font-style:normal}
+.delivery-choice-impact{font-size:11px;line-height:1.35;color:#4c5b43}
+.delivery-choice.risky .delivery-choice-impact{color:#744538}
+.delivery-choice-action{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:auto;padding-top:6px;border-top:1px solid #c8cfb4;color:#334d38;font-size:12px;font-weight:900}
+.delivery-choice.risky .delivery-choice-action{border-color:#d8b6a6;color:#864638}
+.delivery-levels .delivery-choice:hover{transform:translateY(-2px);box-shadow:0 6px 12px #31432b2a}
+.delivery-levels .delivery-choice.risky:hover{box-shadow:0 6px 12px #793e3028}
+.delivery-levels .delivery-choice:focus-visible{outline:3px solid #d7ad3e;outline-offset:3px}
+.delivery-levels .delivery-choice:disabled{cursor:not-allowed;opacity:.62;transform:none;box-shadow:none}
+@media(max-width:680px){.dispatch-heading{align-items:flex-start}.dispatch-meta{grid-template-columns:1fr;gap:8px}.delivery-levels{grid-template-columns:1fr}.delivery-levels .delivery-choice{min-height:0}.delivery-decision{align-items:flex-start;flex-direction:column;gap:3px}.delivery-decision small{text-align:left}}
+@media(max-width:420px){.dispatch-card{padding:13px 14px 12px}.dispatch-heading{flex-direction:column;gap:7px}.dispatch-stamps{width:100%;justify-content:flex-start}.dispatch-card h3{font-size:19px}.delivery-decision{margin-top:12px}.delivery-levels .delivery-choice{padding:11px 12px}}
