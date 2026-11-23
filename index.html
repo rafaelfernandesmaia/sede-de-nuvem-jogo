@@ -33,11 +33,12 @@
 <header class="top">
   <div class="brand"><div class="logo" aria-hidden="true">💧</div><b>SEDE DE NUVEM<br><small>CADERNO DE CAMPO · PECÉM</small></b></div>
   <nav class="top-actions" aria-label="Ações do jogo">
-    <button class="btn" id="onlineTop" type="button">🌐 Jogar online</button>
-    <button class="btn" id="componentsBtn" type="button">♻ Componentes</button>
-    <button class="btn" id="rulesBtn" type="button">📖 Regras</button>
-    <button class="btn" id="settingsTop" type="button">⚙ Configurações</button>
-    <button class="btn" id="newGameBtn" type="button">🏠 Início</button>
+    <button class="btn" id="onlineTop" type="button">Jogar online</button>
+    <button class="btn" id="componentsBtn" type="button">Componentes</button>
+    <button class="btn" id="rulesBtn" type="button">Regras</button>
+    <button class="btn" id="glossaryBtn" type="button">Glossário</button>
+    <button class="btn" id="settingsTop" type="button">Configurações</button>
+    <button class="btn" id="newGameBtn" type="button">Menu</button>
   </nav>
 </header>
 <section class="context" aria-label="História do jogo">
@@ -49,7 +50,7 @@
   <section class="left" aria-label="Tabuleiro e trilha comum">
     <div id="trackWrap" class="track-wrap"></div>
     <div class="board-frame"><div id="board" class="board" role="grid" aria-label="Tabuleiro em anel com 32 casas"></div>
-      <div class="legend"><span>🏛️ Território</span><span>⚠️ Dilema</span><span>✦ Power Up</span><span>☀️ Seca: recue 2</span><span>· Neutra</span></div>
+      <div class="legend" aria-label="Legenda de campo"><span><b>ANA</b> território Anacé</span><span><b>H₂O</b> poços</span><span><b>EOL</b> parque eólico</span><span><b>TRB</b> Tribunal</span><span><b>DC</b> data center</span><span><b>D</b> dilema</span><span><b>PU</b> recurso</span><span><b>SECA</b> recue 2</span></div>
     </div>
     <div class="decks" aria-label="Baralhos do jogo">
       <div class="deck dilemmas"><b>⚠ CARTAS DE DILEMA</b><span id="dilemmaCount">10 cartas</span></div>
@@ -60,13 +61,15 @@
   </section>
   <aside class="side">
     <section class="panel"><div class="panel-head"><h2>JOGADORES E PONTOS</h2><span class="badge" id="round">RODADA 1 / 10</span></div><div id="turnAnnouncement" class="turn-announcement" aria-live="polite"></div><div id="players"></div></section>
+    <section class="panel"><div class="panel-head"><h2>CONTRATO REGIONAL</h2><span class="badge">COOPERATIVO</span></div><div id="contractPanel"></div></section>
     <section class="panel">
       <div class="panel-head"><h2>CARGA DO TURNO</h2><span class="badge" id="deliveryProgress">0 / 3</span></div>
-      <div id="cargoPanel"></div><p class="turn-msg" id="turnMsg"></p>
+      <div id="cargoPanel"></div><div id="impactPreview" class="impact-preview" aria-live="polite"></div><p class="turn-msg" id="turnMsg"></p>
       <div class="dice-box" role="status" aria-live="polite"><span class="dice-face" id="diceFace">🎲</span><span id="diceLabel">Aguardando início</span></div>
-      <div class="controls"><button class="btn" id="rollBtn" type="button">🎲 Rolar dado</button><button class="btn" id="endTurnBtn" type="button">Encerrar turno →</button></div>
+      <div class="controls"><button class="btn primary" id="rollBtn" type="button">Rolar o dado</button><button class="btn" id="endTurnBtn" type="button">Encerrar turno →</button></div>
     </section>
     <section class="panel"><div class="panel-head"><h2>CONTROLE DOS TERRITÓRIOS</h2><span class="badge">+1 PONTO CADA</span></div><div id="territoryList" class="territory-list"></div></section>
+    <section class="panel"><div class="panel-head"><h2>ÚLTIMA JOGADA</h2><span>↻</span></div><div id="lastMoveSummary"></div></section>
     <section class="panel"><div class="panel-head"><h2>DIÁRIO DA PARTIDA</h2><span>📜</span></div><div id="log" class="log"></div></section>
   </aside>
 </main>
@@ -74,6 +77,7 @@
 <div class="toast hidden" id="toast" role="status" aria-live="polite"></div>
 <div class="roll-overlay hidden" id="rollOverlay" role="status" aria-live="polite"><div class="roll-stage"><div class="roll-caption" id="rollCaption">VEZ DE JOGADOR</div><div class="roll-die rolling" id="rollDie" aria-hidden="true">🎲</div><div class="roll-number" id="rollNumber">O DADO ESTÁ ROLANDO…</div><div class="roll-hint" id="rollHint">Seu marcador vai avançar casa por casa</div></div></div>
 <div class="overlay" id="overlay"><div id="modal" class="modal setup-modal"></div></div>
+<script src="./game-rules.js"></script>
 <script>
 "use strict";
 const COLORS = [{name:"Verde",value:"#75a36c"},{name:"Azul",value:"#72aeb8"},{name:"Terracota",value:"#d88469"},{name:"Violeta",value:"#a295c4"}];
@@ -135,55 +139,9 @@ function current(){return G&&G.players[G.pi]}
 function houseTypeAt(index){if(TERRITORY_SEEDS.some(function(t){return t.house-1===index}))return"territory";return HOUSE_TYPES[index]||"neutral"}
 function territoryAt(index){return G&&G.territories?G.territories.find(function(t){return t.house-1===index}):null}
 function isMyTurn(){return!G||!G.online||!!(current()&&current().uid===G.online.uid)}
-function canAct(){return!!(G&&G.game&&rulesSeen&&isMyTurn()&&!G.moving&&!G.rolling&&G.pendingLanding==null&&!G.pendingChoice)}
-function addLog(message){if(!G)return;G.log=G.log||[];G.log.unshift({round:G.round,text:String(message)});G.log=G.log.slice(0,36)}
+function canAct(){return!!(G&&G.game&&rulesSeen&&isMyTurn()&&!G.moving&&!G.rolling&&G.moveRemaining===0&&G.pendingLanding==null&&!G.pendingChoice&&SedeRules.validate(G).length===0)}
+function addLog(message){if(!G)return;G.log=G.log||[];G.log.unshift({round:G.round,text:String(message)});G.log=G.log.slice(0,36);SedeRules.recordLastMove(G,current(),message)}
 function toast(message){const el=$("toast");el.textContent=message;el.classList.remove("hidden");clearTimeout(toastTimer);toastTimer=setTimeout(function(){el.classList.add("hidden")},2200)}
-function trackHTML(){const a=G?G.aquifer:10;return'<div class="track-head"><span>💧 Aquífero compartilhado</span><strong>'+a+' / 10</strong></div><div class="track" role="meter" aria-label="Nível do aquífero" aria-valuemin="0" aria-valuemax="10" aria-valuenow="'+a+'"><i style="width:'+a*10+'%"></i></div><div class="track-caption"><span>0 · crise coletiva</span><span>10 · recurso preservado</span></div>'}
-function drawBoard(){
-  const board=$("board");board.innerHTML="";
-  for(let i=0;i<32;i++){
-    const stateTerritory=territoryAt(i),seed=TERRITORY_SEEDS.find(function(t){return t.house-1===i}),kind=houseTypeAt(i),info=seed?{icon:seed.icon,label:seed.short}:HOUSE_INFO[kind];
-    const cell=document.createElement("div");cell.className="cell "+kind;cell.style.gridRow=String(COORDS[i][0]+1);cell.style.gridColumn=String(COORDS[i][1]+1);cell.setAttribute("role","gridcell");cell.setAttribute("aria-label","Casa "+(i+1)+": "+(seed?seed.name:info.name));
-    const num=document.createElement("span");num.className="num";num.textContent=String(i+1);cell.appendChild(num);
-    if(stateTerritory&&stateTerritory.owner!==null&&stateTerritory.owner!==undefined){const owner=document.createElement("span");owner.className="owner-mark";owner.style.background=G.players[stateTerritory.owner].color;owner.title="Controlado por "+G.players[stateTerritory.owner].name;cell.appendChild(owner)}
-    const ico=document.createElement("span");ico.className="ico";ico.setAttribute("aria-hidden","true");ico.textContent=info.icon;cell.appendChild(ico);
-    const label=document.createElement("span");label.className="label";label.textContent=info.label;cell.appendChild(label);
-    const tokens=document.createElement("span");tokens.className="tokens";
-    if(G)G.players.forEach(function(p,j){if(p.pos===i){const token=document.createElement("span");token.className="token";token.style.background=p.color;token.textContent=String(j+1);token.title=p.name;tokens.appendChild(token);if(j===G.pi)cell.classList.add("active")}});
-    cell.appendChild(tokens);board.appendChild(cell)
-  }
-  const center=document.createElement("div");center.className="board-center";center.setAttribute("aria-label","Ilustração do Porto do Pecém, Ceará, com mar, guindaste e centro de dados");center.innerHTML='<svg class="pecem-art" viewBox="0 0 480 300" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><linearGradient id="pecemSea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6ca3a3"/><stop offset="1" stop-color="#315d70"/></linearGradient></defs><circle cx="414" cy="46" r="25" fill="#f4d27d" opacity=".95"/><path d="M0 142 Q70 111 136 135 T270 132 T480 119 V174 H0Z" fill="#789878"/><path d="M0 153 Q72 145 130 157 T250 153 T365 158 T480 147 V300 H0Z" fill="url(#pecemSea)"/><path d="M0 183 Q74 174 144 184 T286 182 T480 187" fill="none" stroke="#c5e1d3" stroke-width="3" opacity=".75"/><path d="M0 211 Q80 202 160 212 T320 211 T480 207" fill="none" stroke="#c5e1d3" stroke-width="2" opacity=".5"/><path d="M0 242 Q72 233 145 243 T290 241 T480 244" fill="none" stroke="#c5e1d3" stroke-width="2" opacity=".42"/><path d="M0 191 L94 170 L153 179 L213 161 L271 181 L343 169 L480 187 V219 H0Z" fill="#c8b77f"/><g stroke="#f5efd6" stroke-width="3" stroke-linecap="round" opacity=".9"><path d="M78 128V66 M78 66L62 53 M78 66L95 54 M78 66L78 44"/><path d="M382 126V75 M382 75L368 64 M382 75L398 63 M382 75L382 54"/></g><g fill="#e8dfc5" stroke="#596b5e" stroke-width="2"><rect x="181" y="126" width="143" height="61" rx="3"/><path d="M174 126L252 96L331 126Z" fill="#b97958"/><rect x="192" y="142" width="22" height="18" fill="#5d8790"/><rect x="224" y="142" width="22" height="18" fill="#5d8790"/><rect x="256" y="142" width="22" height="18" fill="#5d8790"/><rect x="288" y="142" width="22" height="18" fill="#5d8790"/><rect x="239" y="164" width="28" height="23" fill="#4b6656"/></g><g fill="#d58c5c" stroke="#42564c" stroke-width="2"><rect x="105" y="177" width="53" height="25" rx="2"/><rect x="111" y="151" width="47" height="22" rx="2" fill="#d8c06e"/><rect x="346" y="178" width="57" height="27" rx="2" fill="#72979a"/><rect x="351" y="150" width="52" height="23" rx="2" fill="#c4775f"/></g><g fill="none" stroke="#594c3d" stroke-width="6" stroke-linecap="square" stroke-linejoin="round"><path d="M125 142V71H248V97M125 73H275M146 74V135M238 74V122M276 97V156"/><path d="M260 97H306"/></g><path d="M276 97V143" stroke="#594c3d" stroke-width="3"/><path d="M269 143H283L276 152Z" fill="#594c3d"/><path d="M0 220 Q60 212 119 220 T238 220 T360 218 T480 221V300H0Z" fill="#305c70" opacity=".74"/></svg><div class="center-caption"><small>CEARÁ · LITORAL</small><strong class="center-title">PORTO DO PECÉM</strong><span class="center-subtitle">MAR · ENERGIA · DADOS</span></div><span class="center-water">AQUÍFERO · '+(G?G.aquifer:10)+' / 10</span>';board.appendChild(center)
-}
-function renderPlayers(){
- const box=$("players"),announcement=$("turnAnnouncement");if(!G){announcement.innerHTML="";box.innerHTML="<div class=\"card-note\">Comece uma partida para escolher os marcadores.</div>";return}
- const active=current(),myTurn=isMyTurn();announcement.innerHTML="<div class=\"turn-banner\"><span class=\"turn-icon\">🎲</span><div><small>AGORA É A VEZ DE</small><strong>"+esc(active.name)+"</strong><em>"+(myTurn?"Jogue o dado e faça sua jogada.":"Aguardando a jogada neste dispositivo.")+"</em></div></div>"+(G.turnNotice&&G.turnNoticeSerial===G.turnSerial?"<p class=\"turn-notice\">"+esc(G.turnNotice)+"</p>":"");
- box.innerHTML=G.players.map(function(p,i){const controlled=G.territories.filter(function(t){return t.owner===i}).length,cargo=p.cargo?(p.cargo.pickedUp?"carga coletada":"buscando origem"):"sem carga",activePlayer=i===G.pi,badge=activePlayer?(myTurn?"SUA VEZ":"VEZ ATUAL"):"NA FILA";return"<div class=\"player-row "+(activePlayer?"current":"")+"\"><span class=\"player-chip\" style=\"background:"+esc(p.color)+"\" aria-hidden=\"true\">"+esc(p.name.charAt(0).toLocaleUpperCase("pt-BR"))+"</span><div class=\"player-text\"><div class=\"player-name-row\"><b>"+esc(p.name)+"</b><span class=\"turn-badge "+(activePlayer?"active":"")+"\">"+badge+"</span></div><small>"+controlled+" território(s) · "+cargo+"</small></div><div class=\"player-score\">"+p.score+" pts<small>"+p.deliveries+"/3 entregas</small></div></div>"}).join("")
-}
-function renderCargo(){
-  const box=$("cargoPanel");if(!G||!current()){box.innerHTML='<p class="card-note">A partida ainda não começou.</p>';return}
-  const p=current(),c=p.cargo;$("deliveryProgress").textContent=p.deliveries+" / 3";
-  if(!c){box.innerHTML='<div class="cargo-card"><b>Sem carga ativa</b><p>Uma carta de Entrega será sorteada no início do seu turno.</p></div>';return}
-  const from=TERRITORY_SEEDS.find(function(t){return t.house===c.from}),to=TERRITORY_SEEDS.find(function(t){return t.house===c.to}),rounds=Math.max(0,c.expiresRound-G.round);
-  box.innerHTML='<article class="cargo-card"><span class="card-label">📦 CARTA DE ENTREGA</span><h3>'+esc(c.name)+'</h3><p>'+esc(c.note)+'</p><div class="cargo-route"><span>Origem: '+esc(from?from.short:"Território")+'</span><span>Destino: '+esc(to?to.short:"Território")+'</span></div><div class="cargo-state">'+(c.pickedUp?"CARGA COLETADA · ":"PASSE PELA ORIGEM · ")+"PRAZO: "+rounds+" RODADA(S)"+'</div></article>'
-}
-function renderTerritories(){
-  const box=$("territoryList");if(!G){box.innerHTML="";return}
-  box.innerHTML=G.territories.map(function(t){const owner=t.owner==null?"Neutro":G.players[t.owner].name,color=t.owner==null?"#d5d0bd":G.players[t.owner].color;return'<div class="territory-item" title="Casa '+t.house+'"><span class="territory-dot" style="background:'+esc(color)+'"></span><span>'+esc(t.short)+'<br><small>'+esc(owner)+'</small></span></div>'}).join("")
-}
-function renderLog(){const box=$("log");if(!G){box.innerHTML='<div class="log-entry"><p>A partida ainda não começou. Use o menu inicial para jogar.</p></div>';return}box.innerHTML=(G.log||[]).map(function(item){return'<div class="log-entry"><small>RODADA '+item.round+'</small><p>'+esc(item.text)+'</p></div>'}).join("")}
-function render(){
-  $("trackWrap").innerHTML=trackHTML();drawBoard();renderPlayers();renderCargo();renderTerritories();renderLog();
-  if(!G)return;
-  $("round").textContent="RODADA "+Math.min(G.round,10)+" / 10";
-  $("dilemmaCount").textContent=(G.dilemmaDeck||[]).length+" no baralho · 10 no total";
-  $("powerCount").textContent=(G.powerDeck||[]).length+" no baralho · 18 no total";
-  $("deliveryCount").textContent=(G.deliveryDeck||[]).length+" no baralho · 8 no total";
-  $("territoryCount").textContent="8 cartas · sorteio inicial";
-  $("diceFace").textContent=G.lastRoll?"⚀⚁⚂⚃⚄⚅"[G.lastRoll-1]:"🎲";
-  $("diceLabel").textContent=G.lastRoll?(G.players[G.pi].name+" tirou "+G.lastRoll):"Dado de 6 faces";
-  $("turnMsg").textContent=!G.game?"Partida encerrada.":!isMyTurn()?"Aguardando a jogada de "+current().name+".":G.pendingChoice?"Resolva a carta aberta para continuar.":G.pendingLanding!=null?"Leia a carta da casa e aplique o efeito.":G.rolled?"Movimento concluído. Encerre o turno quando terminar a conversa.":"Na sua vez: role o dado e siga o caminho.";
-  $("rollBtn").disabled=!canAct()||G.rolled;$("endTurnBtn").disabled=!canAct()||!G.rolled
-}
 function modal(content,extraClass){$("overlay").classList.remove("hidden");$("modal").className="modal "+(extraClass||"");$("modal").innerHTML=content}
 function closeModal(){$("overlay").classList.add("hidden")}
 function closeInfoModal(){
@@ -196,8 +154,8 @@ function setup(){render();showMainMenu()}
 function showMainMenu(){
  const active=!!(G&&G.game),status=active?"Partida em andamento · Rodada "+G.round+" de 10":"Uma mesa para discutir escolhas, água e tecnologia.";
  const resume=active?'<button class="btn primary menu-wide" id="menuContinue" type="button">▶ Continuar partida · vez de '+esc(current().name)+'</button>':'';
- modal('<div class="hero"><div><span class="eyebrow">JOGO DE TABULEIRO DIGITAL · PECÉM, CEARÁ · 2030</span><h1>SEDE DE NUVEM</h1><p>'+status+'</p></div><div class="hero-art" aria-hidden="true">☁️</div></div><div class="setup-section"><h3>O que vamos fazer?</h3><div class="menu-grid">'+resume+'<button class="btn primary menu-wide" id="menuNewGame" type="button">🎲 Jogar partida</button><button class="btn" id="menuOnline" type="button">🌐 Jogar online com outras pessoas</button><button class="btn" id="menuRules" type="button">📖 Regras do jogo</button><button class="btn" id="menuComponents" type="button">♻ Peças e baralhos</button><button class="btn" id="menuSettings" type="button">⚙ Configurações</button></div><p class="card-note">De 2 a 4 jogadores · Cada pessoa escolhe um marcador e joga no seu turno.</p></div>',"setup-modal menu-modal");
- $("menuNewGame").onclick=showPlayerSetup;if(active)$("menuContinue").onclick=resumeGame;$("menuOnline").onclick=function(){if(window.openOnline)window.openOnline()};$("menuRules").onclick=function(){showRules(false)};$("menuComponents").onclick=showComponents;$("menuSettings").onclick=showSettings
+ modal('<div class="hero"><div><span class="eyebrow">JOGO DE TABULEIRO DIGITAL · PECÉM, CEARÁ · 2030</span><h1>SEDE DE NUVEM</h1><p>'+status+'</p></div><div class="hero-art" aria-hidden="true"><svg viewBox="0 0 140 100"><path d="M26 53c0-12 9-21 21-21 6-13 27-14 35 0 16-2 27 10 27 22 0 10-8 17-19 17H46c-12 0-20-7-20-18Z"/><path d="M47 77v12h44V77m-35 0v12m26-12v12M42 89h54"/><path d="M68 16c-5 7-9 11-9 16a9 9 0 0 0 18 0c0-5-4-9-9-16Z"/><path d="M46 61h48"/></svg></div></div><div class="setup-section"><h3>O que vamos fazer?</h3><div class="menu-grid">'+resume+'<button class="btn primary menu-wide" id="menuNewGame" type="button">Jogar uma partida</button><button class="btn" id="menuOnline" type="button">Jogar online com outras pessoas</button><button class="btn" id="menuRules" type="button">Ler as regras</button><button class="btn" id="menuGlossary" type="button">Abrir o glossário didático</button><button class="btn" id="menuComponents" type="button">Ver peças e baralhos</button><button class="btn" id="menuSettings" type="button">Ajustar configurações</button></div><p class="card-note">De 2 a 4 jogadores · Escolham os nomes dos marcadores e joguem por turno.</p></div>',"setup-modal menu-modal");
+ $("menuNewGame").onclick=showPlayerSetup;if(active)$("menuContinue").onclick=resumeGame;$("menuOnline").onclick=function(){if(window.openOnline)window.openOnline()};$("menuRules").onclick=function(){showRules(false)};$("menuGlossary").onclick=showGlossary;$("menuComponents").onclick=showComponents;$("menuSettings").onclick=showSettings
 }
 function resumeGame(){
  if(!G||!G.game){showMainMenu();return}rulesSeen=true;closeModal();render();
@@ -245,16 +203,23 @@ function makeGame(roster,online){
 }
 function startLocal(){
   const count=+$("playerCount").value,roster=[];for(let i=0;i<count;i++)roster.push({name:$("playerName"+i).value.trim()||("Jogador "+(i+1)),color:COLORS[i].value});
+  if(window.clearSavedLocalGame)window.clearSavedLocalGame();if(G&&G.online&&window.leaveOnline)window.leaveOnline();SETTINGS.playerCount=count;SETTINGS.names=roster.map(function(p){return p.name});saveSettings();
   G=makeGame(roster,null);rulesSeen=false;render();showRules(true);sync()
 }
 function showRules(intro){
   const title=intro?"Antes da primeira jogada":"Como jogar · Sede de Nuvem";
-  modal('<span class="eyebrow">'+(intro?"LEIA ANTES DE COMEÇAR":"GUIA DA PARTIDA")+'</span><h2>'+title+'</h2><p>Jogo semicooperativo para estudantes de Engenharia de Software e Ciência da Computação. Os peões são apenas marcadores; ninguém recebe habilidade ou meta individual.</p><div class="rule-callout"><b>Objetivo:</b> entregar cargas e somar pontos sem deixar o aquífero secar. Se a água chegar a 0, todos perdem. Com água acima de 0, vence quem tiver mais pontos ao fim da partida.</div><div class="rule-grid"><div class="rule-item"><b>1 · Preparação</b>São 2 a 4 jogadores. Sorteiem 8 territórios: com 2 jogadores, cada um recebe 3 e 2 ficam neutros; com 3, cada um recebe 2 e 2 ficam neutros; com 4, cada um recebe 2. Todos os peões começam na casa 1 do tabuleiro. O maior resultado no dado começa; empate é rolado de novo.</div><div class="rule-item"><b>2 · Sua vez e a carta de Entrega</b>Se não tiver carga ativa, compre uma carta. Passe pelo território de origem para coletá-la e termine o movimento no território de destino em até 3 rodadas. Atraso ou carga perdida em Disputa devolve a carta sem tirar pontos.</div><div class="rule-item"><b>3 · Movimento e casas</b>Role 1 dado de 6 faces e avance pelo anel de 32 casas. Territórios estão nas casas 4, 8, 12, 16, 20, 24, 28 e 32. Dilema: compre uma carta e escolha uma resposta honesta ou maquiada. Power Up: efeito imediato. Seca: recue 2. Casa neutra: sem efeito.</div><div class="rule-item"><b>4 · Disputa por território</b>Só acontece se você terminar o movimento no território de outro jogador; passar por ele não basta. Ataque e defesa rolam um dado. Se o atacante tirar mais, toma o território. Se o defensor tirar mais, mantém o território e o atacante recua 2 casas e devolve a carga. Empate: o defensor mantém, o atacante recua 1 casa e conserva a carga.</div><div class="rule-item"><b>5 · Pontos, honestidade e Power Ups</b>Entrega honesta no prazo: +3 pontos e 1 Power Up imediato. Entrega maquiada não descoberta: +4 pontos, mas o aquífero já caiu 1 na escolha. Auditoria revela a carga maquiada: devolva-a e perca 2 pontos. Cada território controlado no fim vale +1 ponto.</div><div class="rule-item"><b>6 · Fim da partida e efeito rebote</b>A partida termina após a rodada 10 ou quando alguém concluir 3 entregas. Se 2 ou mais entregas terminarem na mesma rodada, o aquífero cai 1, a menos que o SLM tenha bloqueado o efeito. Se o aquífero chegar a 0, todos perdem.</div></div><div class="form-actions"><button class="btn primary" id="closeRules" type="button">'+(intro?"Entendi · começar a partida":"Voltar ao jogo")+'</button></div>',"rules-modal");
+  modal('<span class="eyebrow">'+(intro?"LEIA ANTES DE COMEÇAR":"GUIA DA PARTIDA")+'</span><h2>'+title+'</h2><p>Jogo semicooperativo para estudantes de Engenharia de Software e Ciência da Computação. Os peões são apenas marcadores; ninguém recebe habilidade ou meta individual.</p><div class="rule-callout"><b>Objetivo:</b> entregar cargas e somar pontos sem deixar o aquífero secar. Se a água chegar a 0, todos perdem. Com água acima de 0, vence quem tiver mais pontos ao fim da partida.</div><div class="rule-grid"><div class="rule-item"><b>1 · Preparação</b>São 2 a 4 jogadores. Sorteiem 8 territórios: com 2 jogadores, cada um recebe 3 e 2 ficam neutros; com 3, cada um recebe 2 e 2 ficam neutros; com 4, cada um recebe 2. Todos os peões começam na casa 1 do tabuleiro. O maior resultado no dado começa; empate é rolado de novo.</div><div class="rule-item"><b>2 · Sua vez e a carta de Entrega</b>Se não tiver carga ativa, compre uma carta e escolha o SLA padrão (3 rodadas) ou expresso (2 rodadas; aquífero −1). Passe pela origem para coletar e termine no destino dentro do prazo. Atraso ou carga perdida em Disputa devolve a carta sem tirar pontos.</div><div class="rule-item"><b>3 · Movimento e casas</b>Role 1 dado de 6 faces e avance pelo anel de 32 casas. Territórios estão nas casas 4, 8, 12, 16, 20, 24, 28 e 32. Dilema: compre uma carta e escolha uma resposta honesta ou maquiada. Power Up: efeito imediato. Seca: recue 2. Casa neutra: sem efeito.</div><div class="rule-item"><b>4 · Disputa por território</b>Só acontece se você terminar o movimento no território de outro jogador; passar por ele não basta. Ataque e defesa rolam um dado. Se o atacante tirar mais, toma o território. Se o defensor tirar mais, mantém o território e o atacante recua 2 casas e devolve a carga. Empate: o defensor mantém, o atacante recua 1 casa e conserva a carga.</div><div class="rule-item"><b>5 · Pontos, honestidade e Power Ups</b>Entrega honesta no prazo: +3 pontos e 1 Power Up imediato. Entrega maquiada não descoberta: +4 pontos, mas o aquífero já caiu 1 na escolha. Auditoria revela a carga maquiada: devolva-a e perca 2 pontos. Cada território controlado no fim vale +1 ponto.</div><div class="rule-item"><b>6 · Fim da partida e efeito rebote</b>A partida termina após a rodada 10 ou quando alguém concluir 3 entregas. Se 2 ou mais entregas terminarem na mesma rodada, o aquífero cai 1, a menos que o SLM tenha bloqueado o efeito. Se o aquífero chegar a 0, todos perdem.</div></div><div class="form-actions"><button class="btn primary" id="closeRules" type="button">'+(intro?"Entendi · começar a partida":"Voltar ao jogo")+'</button></div>',"rules-modal");
   $("closeRules").onclick=function(){closeModal();rulesSeen=true;if(G&&G.game)resumeGame();else showMainMenu()}
 }
 function showComponents(){
-  modal('<span class="eyebrow">PROTÓTIPO FÍSICO · MATERIAIS RECICLADOS</span><h2>O que existe no tabuleiro</h2><p>O jogo digital mantém as quantidades e a lógica da versão de tabuleiro analógica.</p><div class="component-grid"><div class="component"><b>1 tabuleiro</b><br>Anel de 32 casas e trilha do aquífero de 10 a 0. Papelão de caixa e papel reutilizado.</div><div class="component"><b>4 marcadores</b><br>Uma cor por peão. Tampinhas de garrafa.</div><div class="component"><b>8 cartas de território</b><br>Uma para cada lugar do mapa. Papel ou cartolina reaproveitada.</div><div class="component"><b>Até 32 fichas de controle</b><br>8 por cor, feitas de papel ou papelão reaproveitado.</div><div class="component"><b>8 cartas de Entrega</b><br>Origem, destino e prazo de 3 rodadas.</div><div class="component"><b>10 cartas de Dilema</b><br>Escolhas de transparência, água, energia e justiça.</div><div class="component"><b>18 cartas de Power Up</b><br>6 tipos, 3 cópias de cada, com efeito imediato.</div><div class="component"><b>1 dado de 6 faces</b><br>O mesmo dado serve para movimento e Disputas.</div></div><h3>Temas éticos presentes nas cartas</h3><p class="card-note">Pegada hídrica · Semiárido · Justiça socioambiental · Consulta prévia (Anacé) · Transparência / Greenwashing · Efeito rebote (Jevons) · Nexo água-energia · Green AI · Licença social · Princípio da responsabilidade.</p><div class="rule-callout">No protótipo físico, cada jogador usa apenas a cor do seu marcador. Não há poderes ou histórias próprios dos peões.</div><div class="form-actions"><button class="btn primary" id="closeModalBtn" type="button">Fechar</button></div>');
+  modal('<span class="eyebrow">PROTÓTIPO FÍSICO · MATERIAIS RECICLADOS</span><h2>O que existe no tabuleiro</h2><p>O jogo digital mantém as quantidades e a lógica da versão de tabuleiro analógica.</p><div class="component-grid"><div class="component"><b>1 tabuleiro</b><br>Anel de 32 casas e trilha do aquífero de 10 a 0. Papelão de caixa e papel reutilizado.</div><div class="component"><b>4 marcadores</b><br>Uma cor por peão. Tampinhas de garrafa.</div><div class="component"><b>8 cartas de território</b><br>Uma para cada lugar do mapa. Papel ou cartolina reaproveitada.</div><div class="component"><b>Até 32 fichas de controle</b><br>8 por cor, feitas de papel ou papelão reaproveitado.</div><div class="component"><b>8 cartas de Entrega</b><br>Origem, destino, SLA padrão de 3 rodadas ou expresso de 2.</div><div class="component"><b>10 cartas de Dilema</b><br>Escolhas de transparência, água, energia e justiça.</div><div class="component"><b>18 cartas de Power Up</b><br>6 tipos, 3 cópias de cada, com efeito imediato.</div><div class="component"><b>1 dado de 6 faces</b><br>O mesmo dado serve para movimento e Disputas.</div></div><h3>Temas éticos presentes nas cartas</h3><p class="card-note">Pegada hídrica · Semiárido · Justiça socioambiental · Consulta prévia (Anacé) · Transparência / Greenwashing · Efeito rebote (Jevons) · Nexo água-energia · Green AI · Licença social · Princípio da responsabilidade.</p><div class="rule-callout">No protótipo físico, cada jogador usa apenas a cor do seu marcador. Não há poderes ou histórias próprios dos peões.</div><div class="form-actions"><button class="btn primary" id="closeModalBtn" type="button">Fechar</button></div>');
   $("closeModalBtn").onclick=closeInfoModal
+}
+function showGlossary(){
+ const terms=[["Aquífero","Reserva de água subterrânea compartilhada. No jogo, a escala didática vai de 0 a 10 e não representa litros."],["Pegada hídrica","Indicador simplificado do uso de água associado às escolhas de cada jogador."],["Pegada energética","Indicador didático de energia consumida pelas rotas e serviços escolhidos."],["Nexo água-energia","Relação entre água e energia: reduzir um impacto pode aumentar o outro."],["Efeito rebote","A eficiência por tarefa pode aumentar o uso total quando a demanda cresce."],["Consulta prévia","Participação livre, prévia e informada da comunidade antes de uma decisão que afeta seu território."],["Greenwashing","Apresentação ambiental seletiva que omite dados, limites ou impactos relevantes."],["SLA","Acordo de nível de serviço: prazo escolhido para cumprir uma entrega. O padrão leva 3 rodadas; o expresso, 2."],["Entrega Expressa","Serviço de alta demanda: encurta o prazo e vale mais pontos, mas reduz o aquífero e amplia a pegada."],["Contrato compartilhado","Missão de equipe para conectar Porto, Parque Eólico e Data Center dentro do prazo."],["Intervenção","Ficha de reação usada para acionar o Tribunal e bloquear um atalho; o Tribunal pode conceder fichas extras."]];
+ const items=terms.map(function(item){return'<div class="rule-item"><b>'+esc(item[0])+'</b>'+esc(item[1])+'</div>'}).join("");
+ modal('<span class="eyebrow">REFERÊNCIA RÁPIDA</span><h2>Glossário didático</h2><p>Os números de pegada e de aquífero são unidades de jogo, não estimativas reais de consumo.</p><div class="rule-grid glossary-grid">'+items+'</div><div class="form-actions"><button class="btn primary" id="closeGlossary" type="button">Fechar</button></div>');
+ $("closeGlossary").onclick=closeInfoModal
 }
 function houseCardText(index){
   const territory=territoryAt(index);
@@ -262,17 +227,19 @@ function houseCardText(index){
   return HOUSE_INFO[houseTypeAt(index)]
 }
 function showHouseCard(index,readOnly){
-  const h=houseCardText(index),actor=current(),action=readOnly?'<div class="status-msg">Aguardando '+esc(actor?actor.name:"o jogador")+' ler a casa e aplicar o efeito.</div>':'<div class="form-actions"><button class="btn primary" id="applyHouseBtn" type="button">Entendi · aplicar efeito</button></div>';
-  modal('<span class="eyebrow">CASA '+(index+1)+' DE 32 · CARTA DO TABULEIRO</span><div class="cards-face"><span class="card-label">'+h.icon+" "+esc(h.name.toUpperCase())+'</span><h2>'+esc(h.name)+'</h2><p>'+esc(h.detail)+'</p></div>'+action);
+  const h=houseCardText(index),actor=current(),action=readOnly?'<div class="status-msg">Aguardando '+esc(actor?actor.name:"o jogador")+' ler a casa e aplicar o efeito.</div>':'<div class="form-actions"><button class="btn primary" id="applyHouseBtn" type="button">Entendi · aplicar efeito</button></div>',preview=SedeRules.landingPreview(index,actor);
+  modal('<span class="eyebrow">CASA '+(index+1)+' DE 32 · CARTA DO TABULEIRO</span><div class="cards-face"><span class="card-label">'+h.icon+" "+esc(h.name.toUpperCase())+'</span><h2>'+esc(h.name)+'</h2><p>'+esc(h.detail)+'</p></div>'+(preview?'<div class="rule-callout impact-preview-card"><b>Prévia de impacto</b> '+esc(preview)+'</div>':'')+action);
   if(!readOnly)$("applyHouseBtn").onclick=function(){resolveLanding(index)}
 }
 function land(index){G.pendingLanding=index;render();showHouseCard(index,false);sync()}
 async function resolveLanding(index){
-  if(!G||!G.game||G.pendingLanding!==index||!isMyTurn())return;
-  G.pendingLanding=null;closeModal();const p=current(),type=houseTypeAt(index);
+  if(!G||!G.game||G.pendingLanding!==index||!isMyTurn()||!SedeRules.canPerform(G,"resolve",current()&&current().id))return;
+  G.pendingLanding=null;G.previewTarget=null;closeModal();const p=current(),type=houseTypeAt(index);
   if(type==="territory"){
     const t=territoryAt(index);
     if(t&&t.owner!=null&&t.owner!==G.pi){await resolveDispute(t);if(!G.game)return}
+    if(p.pos!==index){render();await sync();return}
+    if(t){const result=SedeRules.visitContractSite(G,p,t.id);if(result)addLog(result.message)}
     const at=territoryAt(p.pos);if(at&&p.cargo&&p.cargo.pickedUp&&at.house===p.cargo.to)completeDelivery(p,at);
     render();await sync();return
   }
@@ -298,10 +265,10 @@ function showDilemma(card,readOnly){
   if(!readOnly){$("honestChoice").onclick=function(){resolveDilemma(true,card)};$("riskyChoice").onclick=function(){resolveDilemma(false,card)}}
 }
 async function resolveDilemma(honest,card){
-  if(!G||!G.pendingChoice||G.pendingChoice.type!=="dilemma"||!isMyTurn())return;
+  if(!G||!G.pendingChoice||G.pendingChoice.type!=="dilemma"||!isMyTurn()||!SedeRules.canPerform(G,"resolve",current()&&current().id))return;
   G.pendingChoice=null;closeModal();const p=current();
   if(honest){addLog(p.name+" escolheu honestidade em “"+card.title+"”. Comprou um Power Up.");render();await sync();drawPowerUp("resposta honesta ao dilema");return}
-  if(p.cargo)p.cargo.maquiada=true;G.aquifer=Math.max(0,G.aquifer-1);
+  if(p.cargo)p.cargo.maquiada=true;SedeRules.changeAquifer(G,-1,"Atalho maquiado");SedeRules.recordFootprint(p,{water:2,energy:1});
   addLog(p.name+" escolheu o atalho maquiado em “"+card.title+"”: avançou 3 casas e o aquífero caiu 1.");render();await sync();
   if(G.aquifer<=0){endGame(true);return}await movePawn(3,true)
 }
@@ -320,10 +287,10 @@ function showPowerCard(card,reason,readOnly){
   if(!readOnly)$("usePowerBtn").onclick=function(){const target=$("powerTarget")?+$("powerTarget").value:null;usePowerUp(card,target)}
 }
 async function usePowerUp(card,targetIndex){
-  if(!G||!G.pendingChoice||G.pendingChoice.type!=="power"||!isMyTurn())return;
+  if(!G||!G.pendingChoice||G.pendingChoice.type!=="power"||!isMyTurn()||!SedeRules.canPerform(G,"resolve",current()&&current().id))return;
   G.pendingChoice=null;closeModal();G.powerDiscard.push(card);const p=current();
   if(card.id==="atalho"){addLog(p.name+" usou Atalho da imprensa: avançou 2 casas.");render();await sync();await movePawn(2,true);return}
-  if(card.id==="circuito"){G.aquifer=Math.min(10,G.aquifer+1);addLog(p.name+" usou Circuito fechado: aquífero +1.")}
+  if(card.id==="circuito"){SedeRules.changeAquifer(G,1,"Circuito fechado");addLog(p.name+" usou Circuito fechado: aquífero +1.")}
   if(card.id==="slm"){G.rebateBlockedRound=G.round;addLog(p.name+" usou o SLM: efeito rebote bloqueado nesta rodada.")}
   if(card.id==="liminar"){const target=G.players[targetIndex];if(target){target.skipNext=true;addLog(p.name+" usou Liminar: "+target.name+" perderá a próxima jogada.")}}
   if(card.id==="consulta"){const t=territoryAt(p.pos);if(t){const previous=t.owner;t.owner=G.pi;addLog(p.name+" usou Consulta prévia realizada e assumiu "+t.name+(previous===G.pi?" novamente":".")+" sem Disputa.")}else addLog("Consulta prévia realizada foi descartada: o peão não estava em um território.")}
@@ -337,13 +304,27 @@ function returnCargo(player,reason){
 function drawDelivery(player){
   if(!G.deliveryDeck.length){G.deliveryDeck=shuffle(G.deliveryDiscard);G.deliveryDiscard=[]}
   const card=G.deliveryDeck.pop();if(!card){addLog("Não há cartas de Entrega disponíveis.");return}
-  player.cargo=Object.assign({},card,{pickedUp:false,maquiada:false,expiresRound:G.round+3});G.pendingChoice={type:"delivery",playerId:player.id,card:player.cargo};addLog(player.name+" recebeu a carta de Entrega “"+card.name+"”.");
+  player.cargo=Object.assign({},card,{pickedUp:false,maquiada:false,serviceLevel:null,expiresRound:G.round+3});G.pendingChoice={type:"delivery",playerId:player.id,card:player.cargo};addLog(player.name+" recebeu a carta de Entrega “"+card.name+"”.");
   render();showDeliveryCard(player.cargo,false);sync()
 }
 function showDeliveryCard(card,readOnly){
-  const actor=current(),from=TERRITORY_SEEDS.find(function(t){return t.house===card.from}),to=TERRITORY_SEEDS.find(function(t){return t.house===card.to}),action=readOnly?'<div class="status-msg">Aguardando '+esc(actor.name)+' confirmar a carta.</div>':'<div class="form-actions"><button class="btn primary" id="acceptDelivery" type="button">Entendi · buscar a origem</button></div>';
-  modal('<span class="eyebrow">DESAFIO FEDEX · CARTA DE ENTREGA</span><div class="cards-face"><span class="card-label">📦 ORIGEM → DESTINO · PRAZO 3 RODADAS</span><h3>'+esc(card.name)+'</h3><p>'+esc(card.note)+'</p><div class="cargo-route"><span>Origem: '+esc(from?from.name:"Território")+'</span><span>Destino: '+esc(to?to.name:"Território")+'</span></div><p class="card-note">Passe pela origem para coletar a carga. Termine seu movimento no destino dentro do prazo.</p></div>'+action);
-  if(!readOnly)$("acceptDelivery").onclick=function(){G.pendingChoice=null;closeModal();render();sync()}
+  const actor=current(),from=TERRITORY_SEEDS.find(function(t){return t.house===card.from}),to=TERRITORY_SEEDS.find(function(t){return t.house===card.to}),standard=SedeRules.deliveryPreview(G,actor,"standard"),express=SedeRules.deliveryPreview(G,actor,"express");
+  const protocol=String((card.id||"").split("").reduce(function(sum,ch){return sum+ch.charCodeAt(0)},0)).padStart(4,"0");
+  const action=readOnly?'<div class="status-msg">Aguardando '+esc(actor.name)+' escolher o prazo e o nível de demanda.</div>':'<div class="delivery-levels"><button class="choice" id="acceptStandard" type="button">PADRÃO · S-01<small>3 rodadas · +3 pontos transparente / +4 maquiada · sem custo extra no aquífero</small></button><button class="choice risky" id="acceptExpress" type="button">EXPRESSA · IA-02<small>2 rodadas · +5 / +6 pontos · aquífero −1 agora · '+(express.windCredit?'crédito eólico reduz a pegada energética':'maior pegada hídrica e energética')+'</small></button></div>';
+  modal('<span class="eyebrow">ORDEM DE DESPACHO · ESCOLHA DE SLA</span><div class="cards-face"><span class="card-label">REGISTRO DE CARGA · PECÉM / 2030</span><div class="dispatch-meta"><span>PROTOCOLO<br>PEC-'+protocol+'</span><span>ROTA<br>'+esc(from?from.short:"ORIGEM")+' → '+esc(to?to.short:"DESTINO")+'</span><span class="dispatch-stamp">RISCO HÍDRICO</span></div><h3>'+esc(card.name)+'</h3><p>'+esc(card.note)+'</p><div class="cargo-route"><span>Origem: '+esc(from?from.name:"Território")+'</span><span>Destino: '+esc(to?to.name:"Território")+'</span></div><p class="card-note">Passe pela origem para coletar a carga. Compare prazo, recompensa e impacto antes de despachar.</p></div><div class="delivery-preview-grid"><div><b>'+standard.level+'</b><small>'+standard.summary+'</small></div><div><b>'+express.level+'</b><small>'+express.summary+'</small></div></div>'+action);
+  if(!readOnly){$("acceptStandard").onclick=function(){acceptDelivery("standard")};$("acceptExpress").onclick=function(){acceptDelivery("express")}}
+}
+function acceptDelivery(level){
+  if(!G||!G.pendingChoice||G.pendingChoice.type!=="delivery"||!isMyTurn()||!SedeRules.canPerform(G,"resolve",current()&&current().id))return;
+  const player=current(),cargo=player.cargo;if(!cargo)return;
+  const preview=SedeRules.deliveryPreview(G,player,level);cargo.serviceLevel=level;cargo.expiresRound=G.round+preview.deadline;G.pendingChoice=null;closeModal();
+  if(level==="express"){
+    SedeRules.changeAquifer(G,-1,"Entrega expressa de alta demanda");
+    SedeRules.recordFootprint(player,{water:preview.waterFootprint-1,energy:preview.energyFootprint-1});
+    if(preview.windCredit)player.windCredit=false;
+    addLog(player.name+" escolheu Entrega Expressa: prazo de 2 rodadas, maior recompensa e aquífero −1."+(preview.windCredit?" Crédito do Parque Eólico aplicado.":""));
+  }else addLog(player.name+" escolheu Entrega Padrão: prazo de 3 rodadas, sem custo extra no aquífero.");
+  render();if(G.aquifer<=0){endGame(true);return}sync()
 }
 function prepareTurn(){
   if(!G||!G.game||!rulesSeen||!isMyTurn()||G.moving||G.rolling||G.pendingLanding||G.pendingChoice)return;
@@ -353,19 +334,22 @@ function prepareTurn(){
   if(!p.cargo)drawDelivery(p);else{render();sync()}
 }
 async function rollDie(){
- if(!canAct()||G.rolled)return;const p=current();G.rolling=true;render();const overlay=$("rollOverlay"),die=$("rollDie");overlay.classList.remove("hidden");die.classList.remove("landed");die.classList.add("rolling");
+ if(!canAct()||G.rolled||!SedeRules.canPerform(G,"roll",current()&&current().id))return;const p=current();G.rolling=true;render();const overlay=$("rollOverlay"),die=$("rollDie");overlay.classList.remove("hidden");die.classList.remove("landed");die.classList.add("rolling");
  $("rollCaption").textContent="VEZ DE "+p.name.toLocaleUpperCase("pt-BR");$("rollHint").textContent="Seu marcador vai avançar casa por casa";$("rollNumber").textContent="O DADO ESTÁ ROLANDO…";
  const faces=["⚀","⚁","⚂","⚃","⚄","⚅"],frames=SETTINGS.motion==="reduced"?1:SETTINGS.motion==="fast"?7:11;for(let i=0;i<frames;i++){die.textContent=faces[Math.floor(Math.random()*6)];await wait(75)}
- const result=d6();G.lastRoll=result;G.rolling=false;G.rolled=true;die.textContent=faces[result-1];die.classList.remove("rolling");die.classList.add("landed");$("rollNumber").textContent=result+" "+(result===1?"CASA":"CASAS");$("rollHint").textContent="O peão vai percorrer o tabuleiro";$("diceFace").textContent=faces[result-1];$("diceLabel").textContent=p.name+" tirou "+result;render();await sync();await wait(650);overlay.classList.add("hidden");die.classList.remove("landed");die.classList.add("rolling");await movePawn(result,false)
+ const result=d6();G.lastRoll=result;G.previewTarget=(p.pos+result)%32;G.moveRemaining=result;G.rolling=false;G.rolled=true;die.textContent=faces[result-1];die.classList.remove("rolling");die.classList.add("landed");$("rollNumber").textContent=result+" "+(result===1?"CASA":"CASAS");$("rollHint").textContent="O peão vai percorrer o tabuleiro";$("diceFace").textContent=faces[result-1];$("diceLabel").textContent=p.name+" tirou "+result;render();await sync();await wait(650);overlay.classList.add("hidden");die.classList.remove("landed");die.classList.add("rolling");await movePawn(result,false)
 }
 async function movePawn(amount,bonus){
-  if(!G||!G.game)return;const p=current(),turn=G.turnSerial;G.moving=true;G.pendingLanding=null;render();
+  if(!G||!G.game)return;const p=current(),turn=G.turnSerial;G.moving=true;G.moveRemaining=Math.max(0,Number(amount)||0);G.pendingLanding=null;render();
   for(let step=0;step<amount;step++){
     if(!G.game||G.turnSerial!==turn)return;p.pos=(p.pos+1)%32;
+    G.moveRemaining=Math.max(0,amount-step-1);
     if(p.cargo&&!p.cargo.pickedUp&&p.pos===p.cargo.from-1){p.cargo.pickedUp=true;const origin=TERRITORY_SEEDS.find(function(t){return t.house===p.cargo.from});addLog(p.name+" passou por "+(origin?origin.name:"a origem")+" e coletou a carga.");toast("Carga coletada: siga até o destino.")}
+    const synergy=SedeRules.visitHouse(G,p,p.pos+1);if(synergy)addLog(p.name+" · "+synergy);
+    const site=territoryAt(p.pos),contractProgress=site&&SedeRules.visitContractSite(G,p,site.id);if(contractProgress)addLog(contractProgress.message);
     render();await sync();await wait(135)
   }
-  if(!G||!G.game||G.turnSerial!==turn)return;G.moving=false;G.rolled=true;addLog(p.name+" terminou na casa "+(p.pos+1)+" de 32.");render();land(p.pos)
+  if(!G||!G.game||G.turnSerial!==turn)return;G.moveRemaining=0;G.moving=false;G.rolled=true;addLog(p.name+" terminou na casa "+(p.pos+1)+" de 32.");render();land(p.pos)
 }
 function showCombatCard(combat,readOnly){
   const faces=["","⚀","⚁","⚂","⚃","⚄","⚅"],finished=combat.phase==="result";
@@ -385,25 +369,28 @@ async function resolveDispute(territory){
 }
 function completeDelivery(player,territory){
   const card=player.cargo;if(!card||!card.pickedUp||card.to!==territory.house)return;
-  const honest=!card.maquiada;player.score+=honest?3:4;player.deliveries++;G.deliveriesThisRound++;G.usedDeliveries.push(card.id);
+  const honest=!card.maquiada,express=card.serviceLevel==="express",consultationBonus=honest&&player.anaceConsulted?1:0;
+  const points=(honest?3:4)+(express?2:0)+consultationBonus;player.score+=points;SedeRules.recordFootprint(player,{water:1,energy:1});
+  if(consultationBonus)player.anaceConsulted=false;
+  player.deliveries++;G.deliveriesThisRound++;G.usedDeliveries.push(card.id);
   if(territory.owner==null)territory.owner=G.pi;
-  const detail=honest?"Entrega honesta no prazo: +3 pontos e 1 Power Up.":"Entrega maquiada não descoberta: +4 pontos; o aquífero caiu 1 quando o atalho foi escolhido.";
+  const detail=(honest?"Entrega transparente":"Entrega maquiada não descoberta")+": +"+points+" pontos"+(express?" (SLA expresso)":"")+(consultationBonus?"; +1 pela consulta Anacé":"")+(honest?" e 1 Power Up.":"; o aquífero já caiu 1 na escolha do atalho.");
   addLog(player.name+" concluiu “"+card.name+"”. "+detail);G.deliveryDiscard.push(DELIVERY_CARDS.find(function(c){return c.id===card.id})||card);player.cargo=null;render();
   if(G.aquifer<=0){endGame(true);return}if(player.deliveries>=3){endGame(false);return}
   if(honest)drawPowerUp("entrega honesta concluída");else{toast("Entrega concluída: +4 pontos; carga maquiada não foi descoberta.");sync()}
 }
 function advanceRound(){
-  if(G.deliveriesThisRound>=2&&G.rebateBlockedRound!==G.round){G.aquifer=Math.max(0,G.aquifer-1);addLog("Efeito rebote: 2 ou mais entregas na rodada aumentaram o consumo. Aquífero −1.")}
+  if(G.deliveriesThisRound>=2&&G.rebateBlockedRound!==G.round){SedeRules.changeAquifer(G,-1,"Efeito rebote");addLog("Efeito rebote: 2 ou mais entregas na rodada aumentaram o consumo. Aquífero −1.")}
   if(G.aquifer<=0){endGame(true);return false}if(G.round>=10){endGame(false);return false}
-  G.round++;G.deliveriesThisRound=0;return true
+  G.round++;G.deliveriesThisRound=0;const failure=SedeRules.failContract(G);if(failure){addLog(failure.message);if(G.aquifer<=0){endGame(true);return false}}return true
 }
 function finishTurn(automatic){
- if(!G||!G.game||(!automatic&&!canAct())||(!automatic&&!G.rolled))return;const finished=current().name;G.pendingLanding=null;G.pendingChoice=null;closeModal();G.rolled=false;G.lastRoll=0;G.turnSerial++;
+ if(!G||!G.game||(!automatic&&(!canAct()||!G.rolled||!SedeRules.canPerform(G,"finish",current()&&current().id))))return;const finished=current().name;G.pendingLanding=null;G.pendingChoice=null;G.previewTarget=null;G.moveRemaining=0;closeModal();G.rolled=false;G.lastRoll=0;G.turnSerial++;
  if(G.pi===G.players.length-1){if(!advanceRound())return;G.pi=0}else G.pi++;
- G.turnNotice="Turno de "+finished+" concluído. Agora é a vez de "+current().name+".";G.turnNoticeSerial=G.turnSerial;addLog(G.turnNotice);render();toast(G.turnNotice);sync();prepareTurn()
+ G.turnNotice=finished+" encerrou a rota. "+current().name+", o próximo registro é seu.";G.turnNoticeSerial=G.turnSerial;addLog(G.turnNotice);render();toast(G.turnNotice);sync();prepareTurn()
 }
 function endGame(waterLoss){
-  if(!G||!G.game)return;G.game=false;G.win=!waterLoss;G.pendingChoice=null;G.pendingLanding=null;G.moving=false;G.rolling=false;if(waterLoss)G.aquifer=0;
+  if(!G||!G.game)return;G.game=false;G.win=!waterLoss;G.pendingChoice=null;G.pendingLanding=null;G.moving=false;G.rolling=false;G.moveRemaining=0;if(waterLoss&&G.aquifer>0)SedeRules.changeAquifer(G,-G.aquifer,"Crise do aquífero");
   const ranking=G.players.map(function(p){const land=G.territories.filter(function(t){return t.owner===G.players.indexOf(p)}).length;return{p:p,total:p.score+land,land:land}}).sort(function(a,b){return b.total-a.total}),winners=waterLoss?[]:ranking.filter(function(x){return x.total===ranking[0].total});
   const scoreboard=ranking.map(function(x,i){return'<div class="player-row"><span class="player-chip" style="background:'+esc(x.p.color)+'"></span><div class="player-text"><b>'+(i+1)+". "+esc(x.p.name)+'</b><small>'+x.p.score+' de entrega + '+x.land+' de território</small></div><div class="player-score">'+x.total+' pts</div></div>'}).join("");
   render();modal('<span class="eyebrow">FIM DA PARTIDA · '+(waterLoss?"CRISE DO AQUÍFERO":"BALANÇO FINAL")+'</span><h2>'+(waterLoss?"O aquífero secou.":"A rota chegou ao fim.")+'</h2><p>'+(waterLoss?"A água chegou a zero. A perda é coletiva: todos os jogadores perdem.":"O aquífero permaneceu acima de zero. Vence "+(winners.length>1?"o empate entre ":"")+winners.map(function(x){return esc(x.p.name)}).join(", ")+" com mais pontos.")+'</p><div class="rule-callout">Água: '+G.aquifer+'/10 · Rodada: '+Math.min(G.round,10)+'/10 · Entregas concluídas: '+G.usedDeliveries.length+'</div>'+scoreboard+'<div class="form-actions"><button class="btn primary" id="restartBtn" type="button">Nova partida</button></div>');
@@ -422,7 +409,8 @@ function openCurrentChoice(readOnly){
 window.startOnlineState=function(roster,ctx){G=makeGame(roster,ctx);rulesSeen=false;render();showRules(true);return window.snapshotOnline()};
 window.snapshotOnline=function(){if(!G)return null;const copy=Object.assign({},G);delete copy.online;return JSON.parse(JSON.stringify(copy))};
 window.applyOnlineState=function(state,ctx){
-  if(!state)return;const wasMoving=G&&G.moving&&isMyTurn();G=Object.assign({},state,{online:ctx});G.pendingLanding=G.pendingLanding==null?null:G.pendingLanding;G.pendingChoice=G.pendingChoice||null;G.combat=G.combat||null;G.territories=(G.territories||[]).map(function(t){return Object.assign({},t,{owner:t.owner==null?null:t.owner})});G.players=(G.players||[]).map(function(p){return Object.assign({cargo:null,skipNext:false},p)});G.log=G.log||[];G.usedDeliveries=G.usedDeliveries||[];G.deliveryDiscard=G.deliveryDiscard||[];G.dilemmaDiscard=G.dilemmaDiscard||[];G.powerDiscard=G.powerDiscard||[];
+  if(!state)return;const wasMoving=G&&G.moving&&isMyTurn(),candidate=Object.assign({},state,{online:ctx});candidate.pendingLanding=candidate.pendingLanding==null?null:candidate.pendingLanding;candidate.pendingChoice=candidate.pendingChoice||null;candidate.combat=candidate.combat||null;candidate.territories=(candidate.territories||[]).map(function(t){return Object.assign({},t,{owner:t.owner==null?null:t.owner})});candidate.players=(candidate.players||[]).map(function(p){return Object.assign({cargo:null,skipNext:false},p)});candidate.log=candidate.log||[];candidate.usedDeliveries=candidate.usedDeliveries||[];candidate.deliveryDiscard=candidate.deliveryDiscard||[];candidate.dilemmaDiscard=candidate.dilemmaDiscard||[];candidate.powerDiscard=candidate.powerDiscard||[];
+  SedeRules.normalize(candidate);const stateErrors=SedeRules.validate(candidate);if(stateErrors.length){console.error("Estado online recusado:",stateErrors);toast("A sala enviou um estado inválido. Atualize a página para tentar de novo.");return}G=candidate;
   if(!G.game){showEndFromState();render();return}render();if(!rulesSeen){showRules(true);return}
   if(G.pendingLanding!==null&&G.pendingLanding!==undefined){showHouseCard(G.pendingLanding,!isMyTurn());return}
   if(G.pendingChoice){openCurrentChoice(!isMyTurn());return}
@@ -435,10 +423,12 @@ function showEndFromState(){
   modal('<span class="eyebrow">PARTIDA ONLINE CONCLUÍDA</span><h2>'+(G.win?"O aquífero resistiu.":"Derrota coletiva: aquífero seco.")+'</h2><p>'+(G.win?"Entre os jogadores, vence quem somou mais pontos: "+winners.map(function(x){return esc(x.p.name)}).join(", ")+".":"Se a água chega a zero, todos perdem.")+'</p><div class="rule-callout">Água '+G.aquifer+'/10 · Rodada '+G.round+'/10</div>'+scoreboard+'<div class="form-actions"><button class="btn primary" id="leaveFinishedRoom" type="button">Fechar</button></div>');
   $("leaveFinishedRoom").onclick=function(){if(window.leaveOnline)window.leaveOnline();setup()}
 }
-$("rollBtn").onclick=rollDie;$("endTurnBtn").onclick=function(){finishTurn(false)};$("rulesBtn").onclick=function(){showRules(false)};$("componentsBtn").onclick=showComponents;$("settingsTop").onclick=showSettings;$("newGameBtn").onclick=setup;$("onlineTop").onclick=function(){if(window.openOnline)window.openOnline()};
-applySettings();setup();
+$("rollBtn").onclick=rollDie;$("endTurnBtn").onclick=function(){finishTurn(false)};$("rulesBtn").onclick=function(){showRules(false)};$("glossaryBtn").onclick=showGlossary;$("componentsBtn").onclick=showComponents;$("settingsTop").onclick=showSettings;$("newGameBtn").onclick=setup;$("onlineTop").onclick=function(){if(window.openOnline)window.openOnline()};
+
 </script>
+<script src="./game-view.js"></script>
 <script src="./melhorias.js"></script>
+<script>applySettings();setup();</script>
 <script src="./firebase-config.js"></script>
 <script type="module">
 const SDK="https://www.gstatic.com/firebasejs/13.4.0/";let app=null,auth=null,db=null,uid=null,activeRoom=null,unsubs=[];

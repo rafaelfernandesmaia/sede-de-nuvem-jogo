@@ -15,7 +15,7 @@ O cenário é uma simulação didática, baseada no tema e na pesquisa bibliogr�
 - De 2 a 4 jogadores, com peões identificados apenas por cores.
 - Tabuleiro em anel com 32 casas.
 - 8 territórios nas casas 4, 8, 12, 16, 20, 24, 28 e 32.
-- 8 cartas de Entrega, com origem, destino e prazo de 3 rodadas.
+- 8 cartas de Entrega, com origem, destino e prazo padrão de 3 rodadas; a partida também oferece SLA expresso de 2 rodadas.
 - 10 cartas de Dilema.
 - 18 cartas de Power Up: 6 tipos, 3 cópias de cada.
 - 1 dado de 6 faces.
@@ -39,14 +39,20 @@ Todos os peões começam na casa 1 do tabuleiro. Todos rolam o dado; o maior res
 2. **Colete a carga.** Passe pelo território de origem. A carga fica com o peão até a entrega, atraso ou perda em Disputa.
 3. **Mova-se.** Role o dado e avance no anel. A casa em que terminar determina o efeito.
 4. **Resolva a casa.** Dilema: compre uma carta e escolha uma resposta honesta ou maquiada. Power Up: compre e use o efeito imediatamente. Seca: recue 2 casas. Neutra: sem efeito.
-5. **Faça a entrega.** Termine o movimento no território de destino dentro de 3 rodadas. Uma entrega honesta vale 3 pontos e um Power Up. Uma entrega maquiada que não for descoberta vale 4 pontos; o aquífero já caiu 1 quando o atalho foi escolhido.
+5. **Escolha o despacho e faça a entrega.** Ao receber uma carga, escolha o SLA padrão (3 rodadas) ou expresso (2 rodadas). O expresso antecipa o custo de 1 ponto do aquífero e marca maior pegada didática; pode render até 2 pontos extras. Uma entrega transparente vale 3 pontos e um Power Up; a maquiada não descoberta vale 4. A Aldeia Anacé pode preparar +1 ponto para a próxima entrega transparente.
 6. **Encerre o turno.** Após todos jogarem, conclua a rodada e aplique o efeito rebote, se houver.
 
 ### Dilemas
 
 A resposta honesta apresenta dados, limites e impactos com transparência e concede um Power Up, usado na hora. O atalho maquiado avança 3 casas, reduz o aquífero em 1 e marca a carga como maquiada. Se uma Auditoria independente revelar essa carga, ela é devolvida e o jogador perde 2 pontos.
 
-Os dilemas tratam de pegada hídrica, consulta prévia, justiça socioambiental, greenwashing, efeito rebote, nexo água-energia e responsabilidade por danos futuros. A carta sobre estimativas de água explica que estudos diferentes podem produzir resultados diferentes.
+Os dilemas tratam de pegada hídrica, consulta prévia, justiça socioambiental, greenwashing, efeito rebote, nexo água-energia e responsabilidade por danos futuros. A carta sobre estimativas de água explica que estudos diferentes podem produzir resultados diferentes. Se alguém propõe um atalho, cada colega pode gastar uma ficha do Tribunal para bloquear a perda de água (o responsável perde 1 ponto), propor um Acordo de Poupança ou passar. Quem propôs o atalho decide se aceita o acordo transparente ou segue adiante.
+
+### Contrato regional e pegada
+
+O contrato Porto–Parque Eólico–Data Center vence ao final da rodada 6. Passar por cada um dos três locais registra o avanço. O contrato só é concluído quando pelo menos duas pessoas participam; cada participante recebe 2 pontos e o aquífero recupera até 2 pontos. Se o prazo expirar, o aquífero perde 1 ponto e cada participante perde 1 ponto. O Tribunal recupera fichas de intervenção (até 2), o Parque Eólico concede um crédito de energia para uma entrega expressa e a passagem pela Aldeia Anacé com carga transparente prepara um bônus de consulta.
+
+O painel e o relatório classificam a pegada combinada de água e energia como Sustentável, Moderada ou Predadora. Esses valores são unidades de jogo para comparar escolhas; não representam litros, kWh nem medições reais. A escala do aquífero também é didática.
 
 ### Disputas por território
 
@@ -87,7 +93,15 @@ O modo online requer que **firebase-config.js** esteja preenchido, o login anôn
 - Cores e alertas reagem ao aquífero compartilhado: 8–10 saudável, 3–7 em atenção e 0–2 em alerta crítico. A escala é didática e não representa litros reais.
 - O Jornal do Pecém registra os acontecimentos e apresenta eventos globais a cada duas rodadas.
 - Cartas com visual de peças físicas, selos de impacto, animação de revelação, dado e peões animados. O botão de som permite ativar ou silenciar efeitos leves.
-- Ao fim da partida, o debriefing resume escolhas transparentes, atalhos e entregas, e ajuda o grupo a conversar sobre o resultado coletivo.
+- Prévia do efeito da casa e da escolha de entrega, jogador da vez destacado, síntese da última jogada e opções de configuração/reinício.
+- O glossário explica os termos centrais durante a partida. O relatório final reúne o resultado, as pegadas por jogador, o contrato e a evolução do aquífero.
+- A interface separa modelo e regras (`game-rules.js`) da renderização (`game-view.js`); o arquivo principal coordena as ações e os diálogos. `melhorias.js` mantém persistência local, eventos, negociação e relatório.
+
+## Validação e limites
+
+- Execute `node --test tests/game-rules.test.js` para validar o modelo de regras. Não há empacotador ou etapa de build: o projeto continua sendo servido como arquivos estáticos.
+- O modo online depende de configuração válida do Firebase, regras do Realtime Database e rede. Essa integração não é exercitada pelos testes locais; os novos campos são serializados no estado da sala.
+- As classificações de pegada e os valores do aquífero são abstrações para discussão em grupo, não dados ambientais observados.
 
 ## TAGS do seminário
 
