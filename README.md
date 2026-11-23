@@ -31,7 +31,7 @@ Embaralhe as 8 cartas de Território e distribua:
 - Com 3 jogadores: 2 territórios para cada pessoa e 2 neutros.
 - Com 4 jogadores: 2 territórios para cada pessoa e nenhum neutro.
 
-Cada peão começa no primeiro território que recebeu. Todos rolam o dado; o maior resultado começa. Empates são rolados novamente.
+Todos os peões começam na casa 1 do tabuleiro. Todos rolam o dado; o maior resultado começa. Empates são rolados novamente.
 
 ## Como jogar
 
