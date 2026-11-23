@@ -48,9 +48,9 @@ A resposta honesta apresenta dados, limites e impactos com transparência e conc
 
 Os dilemas tratam de pegada hídrica, consulta prévia, justiça socioambiental, greenwashing, efeito rebote, nexo água-energia e responsabilidade por danos futuros. A carta sobre estimativas de água explica que estudos diferentes podem produzir resultados diferentes. Se alguém propõe um atalho, cada colega pode gastar uma ficha do Tribunal para bloquear a perda de água (o responsável perde 1 ponto), propor um Acordo de Poupança ou passar. Quem propôs o atalho decide se aceita o acordo transparente ou segue adiante.
 
-### Contrato regional e pegada
+### Territórios e pegada
 
-O contrato Porto–Parque Eólico–Data Center vence ao final da rodada 6. Passar por cada um dos três locais registra o avanço. O contrato só é concluído quando pelo menos duas pessoas participam; cada participante recebe 2 pontos e o aquífero recupera até 2 pontos. Se o prazo expirar, o aquífero perde 1 ponto e cada participante perde 1 ponto. O Tribunal recupera fichas de intervenção (até 2), o Parque Eólico concede um crédito de energia para uma entrega expressa e a passagem pela Aldeia Anacé com carga transparente prepara um bônus de consulta.
+O Tribunal recupera fichas de intervenção (até 2), o Parque Eólico concede um crédito de energia para uma entrega expressa e a passagem pela Aldeia Anacé com carga transparente prepara um bônus de consulta.
 
 O painel e o relatório classificam a pegada combinada de água e energia como Sustentável, Moderada ou Predadora. Esses valores são unidades de jogo para comparar escolhas; não representam litros, kWh nem medições reais. A escala do aquífero também é didática.
 
@@ -94,7 +94,7 @@ O modo online requer que **firebase-config.js** esteja preenchido, o login anôn
 - O Jornal do Pecém registra os acontecimentos e apresenta eventos globais a cada duas rodadas.
 - Cartas com visual de peças físicas, selos de impacto, animação de revelação, dado e peões animados. O botão de som permite ativar ou silenciar efeitos leves.
 - Prévia do efeito da casa e da escolha de entrega, jogador da vez destacado, síntese da última jogada e opções de configuração/reinício.
-- O glossário explica os termos centrais durante a partida. O relatório final reúne o resultado, as pegadas por jogador, o contrato e a evolução do aquífero.
+- O glossário explica os termos centrais durante a partida. O relatório final reúne o resultado, as pegadas por jogador e a evolução do aquífero.
 - A interface separa modelo e regras (`game-rules.js`) da renderização (`game-view.js`); `game-hooks.js` oferece eventos nomeados para persistência, apresentação, eventos globais, negociação e relatório. O arquivo principal coordena telas e valida o fluxo de turno.
 - A demo rápida dura 3 rodadas, sorteia territórios pela tabela do roteiro e prepara uma Disputa; os atalhos de apresentação também abrem um Dilema e uma Auditoria. Modo apresentação e alto contraste ampliam a leitura em sala.
 - O relatório registra variação do aquífero, tempo, pegadas por marcador, escolhas transparentes e atalhos, auditorias e efeito rebote. É um registro da partida, não uma medição ambiental.

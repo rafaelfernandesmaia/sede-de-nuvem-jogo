@@ -24,11 +24,10 @@ function makeState(overrides) {
   }, overrides || {}));
 }
 
-test("normaliza partidas antigas sem perder jogadores e cria estado cooperativo", () => {
-  const state = makeState({ aquifer: 8 });
+test("normaliza partidas antigas sem perder jogadores e descarta o contrato removido", () => {
+  const state = makeState({ aquifer: 8, contract: { id: "corredor-regional" } });
   assert.equal(state.version, 2);
-  assert.equal(state.contract.id, "corredor-regional");
-  assert.deepEqual(state.contract.visitedSites, []);
+  assert.equal(state.contract, undefined);
   assert.equal(state.aquiferHistory[0].value, 8);
   assert.equal(state.players[0].interventionTokens, 1);
   assert.deepEqual(state.players[0].footprint, { water: 0, energy: 0 });
@@ -73,34 +72,6 @@ test("classifica pegadas individuais e aplica as sinergias dos territórios", ()
   assert.equal(player.anaceConsulted, true);
   assert.match(Rules.visitHouse(state, player, 4), /ficha de intervenção/);
   assert.equal(player.interventionTokens, 2);
-});
-
-test("contrato exige os três locais e duas pessoas antes de premiar a equipe", () => {
-  const state = makeState({ aquifer: 7 });
-  const a = state.players[0], b = state.players[1];
-  assert.equal(Rules.visitContractSite(state, a, "porto").added, true);
-  Rules.visitContractSite(state, a, "eolica");
-  const third = Rules.visitContractSite(state, a, "datacenter");
-  assert.equal(third.completed, false);
-  assert.equal(state.contract.visitedSites.length, 3);
-  const completed = Rules.visitContractSite(state, b, "porto");
-  assert.equal(completed.completed, true);
-  assert.equal(state.contract.complete, true);
-  assert.equal(state.aquifer, 9);
-  assert.equal(a.score, 2);
-  assert.equal(b.score, 2);
-});
-
-test("prazo perdido cobra o aquífero e os pontos dos participantes uma única vez", () => {
-  const state = makeState({ round: 7, aquifer: 5 });
-  state.contract.deadlineRound = 6;
-  state.contract.participants = ["P1"];
-  state.players[0].score = 3;
-  const first = Rules.failContract(state);
-  assert.match(first.message, /falhou no prazo/);
-  assert.equal(state.aquifer, 4);
-  assert.equal(state.players[0].score, 2);
-  assert.equal(Rules.failContract(state), null);
 });
 
 test("prévia de entrega mostra prazo, recompensa, aquífero e crédito eólico", () => {
@@ -337,16 +308,15 @@ test("compra e reciclagem de cartas mantêm baralhos dentro do estado puro", () 
   assert.equal(discarded.state.powerDiscard[0].id, "P1");
 });
 
-test("avanço de rodada zera entregas e aplica prazo do contrato", () => {
+test("avanço de rodada zera entregas sem alterar os recursos", () => {
   const state = makeState({ round: 6, deliveriesThisRound: 2, aquifer: 7 });
-  state.contract = { complete: false, failed: false, deadlineRound: 6, participants: ["P1", "P2"] };
   const advanced = Rules.advanceRoundState(state);
   assert.equal(state.round, 6);
   assert.equal(state.deliveriesThisRound, 2);
   assert.equal(advanced.state.round, 7);
   assert.equal(advanced.state.deliveriesThisRound, 0);
-  assert.equal(advanced.state.contract.failed, true);
-  assert.equal(advanced.state.aquifer, 6);
+  assert.equal(advanced.state.aquifer, 7);
+  assert.equal(advanced.contract, undefined);
 });
 
 test("fecha o turno com validação, rebote e transição para a rodada seguinte", () => {

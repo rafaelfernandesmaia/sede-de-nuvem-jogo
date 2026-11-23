@@ -2,7 +2,6 @@
 (function (root) {
   "use strict";
 
-  const CONTRACT_SITES = ["porto", "eolica", "datacenter"];
   const VALID_CHOICES = ["delivery", "dilemma", "power", "council", "councilActor"];
   const isRecord = function (value) { return !!value && typeof value === "object" && !Array.isArray(value); };
   const clamp = (value, min, max) => Math.max(min, Math.min(max, Number(value) || 0));
@@ -13,19 +12,6 @@
     const copy = JSON.parse(JSON.stringify(source));
     if (online) copy.online = online;
     return copy;
-  }
-
-  function createContract(round) {
-    return {
-      id: "corredor-regional",
-      name: "Corredor Porto · Parque Eólico · Data Center",
-      sites: CONTRACT_SITES.slice(),
-      visitedSites: [],
-      participants: [],
-      deadlineRound: Math.min(6, (round || 1) + 5),
-      complete: false,
-      failed: false
-    };
   }
 
   function normalize(state) {
@@ -39,11 +25,7 @@
       : [{ round: state.round || 1, value: state.aquifer, delta: 0, reason: "Estado inicial ou retomado" }];
     state.lastMove = state.lastMove || null;
     state.moveRemaining = Math.max(0, Number(state.moveRemaining) || 0);
-    state.contract = isRecord(state.contract) ? state.contract : createContract(state.round || 1);
-    state.contract.sites = Array.isArray(state.contract.sites) ? state.contract.sites : CONTRACT_SITES.slice();
-    state.contract.visitedSites = Array.isArray(state.contract.visitedSites) ? state.contract.visitedSites : [];
-    state.contract.participants = Array.isArray(state.contract.participants) ? state.contract.participants : [];
-    state.contract.deadlineRound = Number(state.contract.deadlineRound) || 6;
+    delete state.contract;
     state.pendingChoice = state.pendingChoice || null;
     state.events = Array.isArray(state.events) ? state.events : [];
     state.decisions = Array.isArray(state.decisions) ? state.decisions : [];
@@ -126,7 +108,6 @@
       if (Array.isArray(state[key]) && (state[key].length > limits[key] || state[key].some(function (item) { return !isRecord(item); }))) errors.push("Conteúdo ou tamanho inválido na lista " + key + ".");
     });
     if (Array.isArray(state.aquiferHistory) && state.aquiferHistory.some(function (item) { return !isRecord(item) || !Number.isInteger(item.value) || item.value < 0 || item.value > 10; })) errors.push("Histórico do aquífero malformado.");
-    if (!isRecord(state.contract) || !Array.isArray(state.contract.sites) || !Array.isArray(state.contract.visitedSites) || !Array.isArray(state.contract.participants)) errors.push("Contrato regional malformado.");
     if (state.pendingChoice != null && (!isRecord(state.pendingChoice) || !VALID_CHOICES.includes(state.pendingChoice.type))) errors.push("Escolha pendente malformada.");
     return errors;
   }
@@ -212,52 +193,6 @@
     return { state: next, message: visitHouse(next, player, house) };
   }
 
-  function visitContractSite(state, player, siteId) {
-    const contract = state && state.contract;
-    if (!contract || contract.complete || contract.failed || !contract.sites.includes(siteId)) return null;
-    const joined = !contract.participants.includes(player.id);
-    if (joined) contract.participants.push(player.id);
-    let added = false;
-    if (!contract.visitedSites.includes(siteId)) {
-      contract.visitedSites.push(siteId);
-      added = true;
-    }
-    const sitesComplete = contract.sites.every(function (site) { return contract.visitedSites.includes(site); });
-    if (sitesComplete && contract.participants.length >= 2) {
-      contract.complete = true;
-      (state.players || []).forEach(function (participant) {
-        if (contract.participants.includes(participant.id)) participant.score += 2;
-      });
-      const water = changeAquifer(state, 2, "Contrato regional concluído");
-      return { completed: true, added: added, message: "Contrato concluído: Porto, Parque Eólico e Data Center conectados. Participantes recebem +2 pontos e o aquífero recupera " + water + "." };
-    }
-    if (sitesComplete && joined) return { completed: false, added: false, message: "Os três locais estão conectados. Falta uma segunda pessoa participar para fechar o contrato." };
-    return added ? { completed: false, added: true, message: player.name + " avançou o contrato regional: " + contract.visitedSites.length + "/" + contract.sites.length + " locais visitados." } : null;
-  }
-
-  function visitContractSiteState(state, playerId, siteId) {
-    const next = cloneState(state);
-    const player = (next.players || []).find(function (item) { return item.id === playerId; });
-    return { state: next, result: visitContractSite(next, player, siteId) };
-  }
-
-  function failContract(state) {
-    const contract = state && state.contract;
-    if (!contract || contract.complete || contract.failed || state.round <= contract.deadlineRound) return null;
-    contract.failed = true;
-    const water = changeAquifer(state, -1, "Contrato regional não concluído");
-    contract.participants.forEach(function (id) {
-      const player = (state.players || []).find(function (item) { return item.id === id; });
-      if (player) player.score -= 1;
-    });
-    return { message: "O contrato regional falhou no prazo: aquífero " + water + "; cada participante perde 1 ponto." };
-  }
-
-  function failContractState(state) {
-    const next = cloneState(state);
-    return { state: next, result: failContract(next) };
-  }
-
   function movePlayer(state, playerId, steps) {
     const next = cloneState(state);
     const player = (next.players || []).find(function (item) { return item.id === playerId; });
@@ -314,8 +249,7 @@
     const next = cloneState(state);
     next.round = Number(next.round || 1) + 1;
     next.deliveriesThisRound = 0;
-    const contract = failContract(next);
-    return { state: next, contract: contract };
+    return { state: next };
   }
 
   function advanceTurnState(state, actorId, roundLimit, automatic) {
@@ -323,7 +257,7 @@
     const actor = currentPlayer(state);
     const pending = state && (state.pendingLanding != null || !!state.pendingChoice || !!state.combat);
     const canSkip = !!(automatic && state && state.game && !validate(state).length && actor && actor.id === actorId && actor.skipNext && !state.moving && !state.rolling && !pending && Number(state.moveRemaining) === 0);
-    if (!canSkip && !canPerform(state, "finish", actorId)) return { state: next, valid: false, roundClosed: false, roundAdvanced: false, rebound: false, contract: null };
+    if (!canSkip && !canPerform(state, "finish", actorId)) return { state: next, valid: false, roundClosed: false, roundAdvanced: false, rebound: false };
     if (automatic) next.players[next.pi].skipNext = false;
     next.pendingLanding = null;
     next.pendingChoice = null;
@@ -336,21 +270,19 @@
     next.turnSerial = (Number(next.turnSerial) || 0) + 1;
     if (state.pi !== state.players.length - 1) {
       next.pi = state.pi + 1;
-      return { state: next, valid: true, roundClosed: false, roundAdvanced: false, rebound: false, contract: null };
+      return { state: next, valid: true, roundClosed: false, roundAdvanced: false, rebound: false };
     }
     const reboundTransition = applyRebound(next);
     let result = reboundTransition.state;
-    let contract = null;
     let roundAdvanced = false;
     const limit = Number(roundLimit) || 10;
     if (result.aquifer > 0 && Number(result.round) < limit) {
       const advance = advanceRoundState(result);
       result = advance.state;
-      contract = advance.contract;
       result.pi = 0;
       roundAdvanced = true;
     }
-    return { state: result, valid: true, roundClosed: true, roundAdvanced: roundAdvanced, rebound: reboundTransition.applied, contract: contract };
+    return { state: result, valid: true, roundClosed: true, roundAdvanced: roundAdvanced, rebound: reboundTransition.applied };
   }
 
   function deliveryPreview(state, player, level) {
@@ -670,9 +602,9 @@
     const messages = {
       4: "Tribunal: pode recuperar 1 ficha de intervenção (limite 2).",
       8: "Aldeia Anacé: consulta transparente prepara +1 ponto numa entrega honesta.",
-      20: "Data Center: local de contrato regional; entregas expressas têm maior pegada.",
+      20: "Data Center: entregas expressas têm maior pegada energética.",
       24: "Parque Eólico: recebe crédito que reduz a pegada energética da próxima entrega expressa.",
-      28: "Porto: completa o corredor regional e habilita a recompensa coletiva."
+      28: "Porto: território estratégico para rotas e controle."
     };
     const base = messages[house] || "";
     const cargo = player && player.cargo;
@@ -681,7 +613,6 @@
   }
 
   const api = {
-    createContract: createContract,
     normalize: normalize,
     validate: validate,
     validateOnlineState: validateOnlineState,
@@ -693,10 +624,6 @@
     recordLastMove: recordLastMove,
     visitHouse: visitHouse,
     visitHouseState: visitHouseState,
-    visitContractSite: visitContractSite,
-    visitContractSiteState: visitContractSiteState,
-    failContract: failContract,
-    failContractState: failContractState,
     movePlayer: movePlayer,
     collectCargo: collectCargo,
     recycleDeck: recycleDeck,

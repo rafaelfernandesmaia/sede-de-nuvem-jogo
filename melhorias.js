@@ -114,7 +114,7 @@
     porto:'<path d="M3 15h18l-3 5H6l-3-5Zm3 0V8h6v7m-3-7V4h9v11M7 11h4m5-4h3M4 23c2-1 4-1 6 0s4 1 6 0 3-1 4 0"/>',
     governo:'<path d="m3 9 9-6 9 6H3Zm2 1v8m5-8v8m4-8v8m5-8v8M3 20h18"/>',
     dilemma:'<path d="m12 3 10 17H2L12 3Z"/><path d="M12 9v5m0 3h.01"/>',
-    power:'<path d="m13 2-9 12h7l-1 8 10-13h-7V2Z"/>',
+    power:'<path d="M3 9h18v12H3zM8 9V6h8v3M3 14h5v3h8v-3h5M11 12h2"/><path d="M6 11h.01M18 11h.01"/>',
     drought:'<path d="M12 3c-3 4-6 7-6 11a6 6 0 0 0 12 0c0-4-3-7-6-11Z M5 21 19 7"/>',
     neutral:'<circle cx="12" cy="12" r="8"/><path d="M8 12h8"/>'
   };
@@ -305,7 +305,7 @@
   });})();
 
 
-/* Fecha o relatório com a série do aquífero, contrato e pegadas individuais. */
+/* Fecha o relatório com a série do aquífero e as pegadas individuais. */
 (()=>{
   const $=selector=>document.querySelector(selector);
   function aquiferChart(){
@@ -323,11 +323,10 @@
   }
   function addReportDetails(){
     const report=$("#overlay .debrief");if(!report||report.querySelector(".aquifer-chart"))return;
-    const contract=G.contract||{},contractText=contract.complete?"Concluído; participantes receberam a recompensa coletiva.":contract.failed?"Não concluído no prazo; o custo coletivo foi aplicado.":"Sem desfecho registrado.";
     const players=(G.players||[]).map(player=>{const band=SedeRules.footprintBand(player);return '<div class="report-player"><span class="report-player-name"><i style="background:'+esc(player.color)+'"></i>'+esc(player.name)+'</span><b class="footprint-badge '+band.className+'">'+band.label+'</b><small>Água '+player.footprint.water+' · Energia '+player.footprint.energy+'</small></div>'}).join("");
     const history='<section class="report-section"><h4>Traçado do aquífero</h4>'+aquiferChart()+'</section>';
-    const team='<section class="report-section"><h4>Fechamento de equipe</h4><p class="small-note"><b>Contrato:</b> '+esc(contractText)+' <span class="contract-result">Progresso: '+(contract.visitedSites||[]).length+'/'+(contract.sites||[]).length+' pontos.</span></p><div class="report-footprints">'+players+'</div></section>';
-    report.insertAdjacentHTML("beforeend",history+team);
+    const footprintSection='<section class="report-section"><h4>Pegadas por jogador</h4><div class="report-footprints">'+players+'</div></section>';
+    report.insertAdjacentHTML("beforeend",history+footprintSection);
   }
   SedeHooks.on("gameEnded",function(){requestAnimationFrame(addReportDetails)});
 })();
